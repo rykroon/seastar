@@ -1,0 +1,72 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pydoftk"
+dynamic = ["version"]
+description = 'Python Digital Ocean Function Tool Kit'
+readme = "README.md"
+requires-python = ">=3.8"
+license = "MIT"
+keywords = []
+authors = [
+  { name = "Ryan Kroon", email = "rykroon.tech@gmail.com" },
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: Implementation :: CPython",
+]
+dependencies = []
+
+[project.urls]
+Documentation = "https://github.com/rykroon/pydoftk#readme"
+Issues = "https://github.com/rykroon/pydoftk/issues"
+Source = "https://github.com/rykroon/pydoftk"
+
+[tool.hatch.version]
+path = "src/pydoftk/__about__.py"
+
+[tool.hatch.envs.default]
+dependencies = [
+  "coverage[toml]>=6.5",
+  "pytest",
+]
+[tool.hatch.envs.default.scripts]
+test = "pytest {args:tests}"
+test-cov = "coverage run -m pytest {args:tests}"
+cov-report = [
+  "- coverage combine",
+  "coverage report",
+]
+cov = [
+  "test-cov",
+  "cov-report",
+]
+
+[[tool.hatch.envs.all.matrix]]
+python = ["3.8", "3.9", "3.10", "3.11"]
+
+[tool.coverage.run]
+source_pkgs = ["pydoftk", "tests"]
+branch = true
+parallel = true
+omit = [
+  "src/pydoftk/__about__.py",
+]
+
+[tool.coverage.paths]
+pydoftk = ["src/pydoftk", "*/pydoftk/src/pydoftk"]
+tests = ["tests", "*/pydoftk/tests"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "no cov",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+]
