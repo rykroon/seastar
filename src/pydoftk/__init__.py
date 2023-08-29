@@ -79,12 +79,17 @@ def function(methods=None, raw=False):
     if methods is None:
         methods = ["GET"]
 
+    # add logic for parsing path parameters.
+
     def decorator(func):
         def wrapper(event):
             if not raw:
                 request = ParsedWebEvent.from_event(event)
             else:
                 request = RawWebEvent.from_event(event)
+            
+            # add logic to consider passing in the context variable.
+            # may require using inspect.signature.
 
             if request.method not in methods:
                 resp = "Method Not Allowed", 405
