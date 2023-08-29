@@ -1,4 +1,6 @@
+from base64 import b64decode
 from dataclasses import dataclass
+from functools import cached_property
 from typing import Any
 
 
@@ -57,12 +59,41 @@ class RawWebEvent:
             },
         )
 
+    @cached_property
+    def decoded_body(self):
+        return b64decode(self.body)
+
+    @cached_property
+    def content_type(self):
+        return self.headers.get('content-type')
+
 
 @dataclass
 class Response:
     body: Any | None = None
     status_code: int | None = None
     headers: dict[str, str] | None = None
+
+
+def function(methods=None, raw=False):
+    if methods is None:
+        methods = ["GET"]
+
+    def decorator(func):
+        def wrapper(event):
+            if not raw:
+                request = ParsedWebEvent.from_event(event)
+            else:
+                request = RawWebEvent.from_event(event)
+
+            if request.method not in methods:
+                resp = "Method Not Allowed", 405
+                return process_response(resp)
+            
+            response = func(request)
+            return process_response(response)
+        return wrapper
+    return decorator
 
 
 def process_response(resp):
@@ -77,7 +108,7 @@ def process_response(resp):
         if resp.headers is not None:
             result["headers"] = resp.headers
 
-        return result or None
+        return result
 
     elif not isinstance(resp, tuple):
         return {"body": resp}
@@ -89,19 +120,3 @@ def process_response(resp):
             return {"body": resp[0], "statusCode": resp[1]}
         case 3:
             return {"body": resp[0], "statusCode": resp[1], "headers": resp[2]}
-
-
-def require_http_methods(method_list, /):
-    def decorator(func):
-        def wrapper(request):
-            if request.method not in method_list:
-                return "Method not allowed", 405
-            return func(request)
-
-        return wrapper
-
-    return decorator
-
-
-require_get = require_http_methods(["GET"])
-require_post = require_http_methods(["POST"])
