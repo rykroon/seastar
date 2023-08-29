@@ -32,41 +32,33 @@ Source = "https://github.com/rykroon/pydoftk"
 [tool.hatch.version]
 path = "src/pydoftk/__about__.py"
 
-[tool.hatch.envs.default]
+[tool.hatch.envs.test]
 dependencies = [
-  "coverage[toml]>=6.5",
   "pytest",
+  "coverage",
 ]
-[tool.hatch.envs.default.scripts]
-test = "pytest {args:tests}"
-test-cov = "coverage run -m pytest {args:tests}"
-cov-report = [
-  "- coverage combine",
-  "coverage report",
-]
-cov = [
-  "test-cov",
-  "cov-report",
-]
+[tool.hatch.envs.test.scripts]
+test = "coverage run -m pytest"
+cov-report = "coverage report -m"
 
-[[tool.hatch.envs.all.matrix]]
+[[tool.hatch.envs.test.matrix]]
 python = ["3.8", "3.9", "3.10", "3.11"]
 
-[tool.coverage.run]
-source_pkgs = ["pydoftk", "tests"]
-branch = true
-parallel = true
-omit = [
-  "src/pydoftk/__about__.py",
+[tool.hatch.envs.type]
+python="3.11"
+dependencies = [
+  "mypy"
 ]
+[tool.hatch.envs.type.scripts]
+check = "mypy --strict src/mongoclasses"
 
-[tool.coverage.paths]
-pydoftk = ["src/pydoftk", "*/pydoftk/src/pydoftk"]
-tests = ["tests", "*/pydoftk/tests"]
-
-[tool.coverage.report]
-exclude_lines = [
-  "no cov",
-  "if __name__ == .__main__.:",
-  "if TYPE_CHECKING:",
+[tool.hatch.envs.docs]
+python="3.11"
+dependencies = [
+  "mkdocs",
+  "mkdocs-material",
+  "mkdocstrings[python]",
 ]
+[tool.hatch.envs.docs.scripts]
+build = "mkdocs build --clean --strict"
+serve = "mkdocs serve"
