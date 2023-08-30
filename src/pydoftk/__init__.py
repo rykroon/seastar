@@ -1,58 +1,31 @@
 from base64 import b64decode
 from dataclasses import dataclass
 from functools import cached_property
+import json
 from typing import Any
-from urllib.parse import parse_qs
+from urllib.parse import parse_qsl
 
 
 @dataclass
-class ParsedWebEvent:
-    """
-    https://docs.digitalocean.com/products/functions/reference/parameters-responses/#parsed-web-events
-    """
-    headers: dict[str, str]
-    method: str
-    path: str
-    data: dict[str, Any]
-
-    @classmethod
-    def from_event(cls, event):
-        http = event["http"]
-        return cls(
-            headers=http["headers"],
-            method=http["method"],
-            path=http["path"],
-            data={
-                k: v
-                for k, v in event.items()
-                if not k.startswith("__ow") and k != "http"
-            },
-        )
-
-
-@dataclass
-class RawWebEvent:
-    """
-    https://docs.digitalocean.com/products/functions/reference/parameters-responses/#raw-web-events
-    """
-    body: str
-    headers: dict[str, str]
-    is_base64_encoded: bool
+class Request:
     method: str
     path: str
     query_string: str
+    headers: dict[str, str]
+    encoded_body: str
+    is_base64_encoded: bool
     parameters: dict[str, Any]
 
     @classmethod
     def from_event(cls, event):
         http = event["http"]
         return cls(
-            headers=http["headers"],
             method=http["method"],
             path=http["path"],
-            body=http["body"],
-            is_base64_encoded=http["isBase64Encoded"],
             query_string=http["queryString"],
+            headers=http["headers"],
+            encoded_body=http["body"],
+            is_base64_encoded=http["isBase64Encoded"],
             parameters={
                 k: v
                 for k, v in event.items()
@@ -61,16 +34,35 @@ class RawWebEvent:
         )
 
     @cached_property
-    def decoded_body(self):
-        return b64decode(self.body)
-    
-    @cached_property
     def query_params(self):
-        return parse_qs(self.query_string)
+        result = {}
+        for k, v in parse_qsl(self.query_string):
+            if k not in result:
+                result[k] = v
+            elif isinstance(result[k], list):
+                result[k].append(v)
+            else:
+                result[k] = [result[k], v]
 
     @cached_property
     def content_type(self):
         return self.headers.get('content-type')
+
+    @cached_property
+    def body(self):
+        return b64decode(self.encoded_body)
+
+    @cached_property
+    def json(self):
+        if self.content_type != "application/json":
+            return None
+        return json.loads(self.body)
+
+    @cached_property
+    def form(self):
+        if self.content_type != "":
+            return None
+        return ...
 
 
 @dataclass
@@ -80,30 +72,12 @@ class Response:
     headers: dict[str, str] | None = None
 
 
-def function(methods=None, raw=False):
-    if methods is None:
-        methods = ["GET"]
-
-    # add logic for parsing path parameters.
-
-    def decorator(func):
-        def wrapper(event):
-            if not raw:
-                request = ParsedWebEvent.from_event(event)
-            else:
-                request = RawWebEvent.from_event(event)
-            
-            # add logic to consider passing in the context variable.
-            # may require using inspect.signature.
-
-            if request.method not in methods:
-                resp = "Method Not Allowed", 405
-                return process_response(resp)
-            
-            response = func(request)
-            return process_response(response)
-        return wrapper
-    return decorator
+def function(func):
+    def wrapper(event):
+        request = Request.from_event(event)
+        result = func(request)
+        return process_response(result)
+    return wrapper
 
 
 def process_response(resp):
