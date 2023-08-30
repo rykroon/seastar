@@ -2,6 +2,7 @@ from base64 import b64decode
 from dataclasses import dataclass
 from functools import cached_property
 from typing import Any
+from urllib.parse import parse_qs
 
 
 @dataclass
@@ -62,6 +63,10 @@ class RawWebEvent:
     @cached_property
     def decoded_body(self):
         return b64decode(self.body)
+    
+    @cached_property
+    def query_params(self):
+        return parse_qs(self.query_string)
 
     @cached_property
     def content_type(self):
@@ -70,7 +75,7 @@ class RawWebEvent:
 
 @dataclass
 class Response:
-    body: Any | None = None
+    body: Any
     status_code: int | None = None
     headers: dict[str, str] | None = None
 
@@ -103,10 +108,7 @@ def function(methods=None, raw=False):
 
 def process_response(resp):
     if isinstance(resp, Response):
-        result = {}
-        if resp.body is not None:
-            result["body"] = resp.body
-
+        result = {"body": resp.body}
         if resp.status_code is not None:
             result["statusCode"] = resp.status_code
 
