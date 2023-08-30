@@ -50,7 +50,7 @@ dependencies = [
   "mypy"
 ]
 [tool.hatch.envs.type.scripts]
-check = "mypy --strict src/mongoclasses"
+check = "mypy --strict src/pydoftk"
 
 [tool.hatch.envs.docs]
 python="3.11"
