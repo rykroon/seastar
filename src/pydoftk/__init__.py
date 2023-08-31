@@ -4,6 +4,7 @@ from functools import cached_property
 import json
 from typing import Any
 from urllib.parse import parse_qsl
+from multidict import MultiDict, MultiDictProxy
 
 
 @dataclass
@@ -12,20 +13,22 @@ class Request:
     path: str
     query_string: str
     headers: dict[str, str]
-    encoded_body: str
-    is_base64_encoded: bool
+    body: str
     parameters: dict[str, Any]
 
     @classmethod
     def from_event(cls, event):
         http = event["http"]
+        body = http["body"]
+        if http.get("isBase64Encoded", False):
+            body = b64decode(body)
+
         return cls(
             method=http["method"],
             path=http["path"],
             query_string=http["queryString"],
             headers=http["headers"],
-            encoded_body=http["body"],
-            is_base64_encoded=http["isBase64Encoded"],
+            body=body,
             parameters={
                 k: v
                 for k, v in event.items()
@@ -35,34 +38,17 @@ class Request:
 
     @cached_property
     def query_params(self):
-        result = {}
-        for k, v in parse_qsl(self.query_string):
-            if k not in result:
-                result[k] = v
-            elif isinstance(result[k], list):
-                result[k].append(v)
-            else:
-                result[k] = [result[k], v]
+        return MultiDictProxy(MultiDict(parse_qsl(self.query_string)))
 
     @cached_property
     def content_type(self):
-        return self.headers.get('content-type')
+        return self.headers.get("content-type")
 
-    @cached_property
-    def body(self):
-        return b64decode(self.encoded_body)
-
-    @cached_property
     def json(self):
-        if self.content_type != "application/json":
-            return None
         return json.loads(self.body)
 
-    @cached_property
     def form(self):
-        if self.content_type != "":
-            return None
-        return ...
+        return MultiDictProxy(MultiDict(parse_qsl(self.body)))
 
 
 @dataclass
@@ -77,6 +63,7 @@ def function(func):
         request = Request.from_event(event)
         result = func(request)
         return process_response(result)
+
     return wrapper
 
 
