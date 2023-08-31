@@ -4,7 +4,7 @@ from functools import cached_property
 import json
 from typing import Any
 from urllib.parse import parse_qsl
-from multidict import MultiDict, MultiDictProxy
+from multidict import MultiDict, MultiDictProxy, CIMultiDict, CIMultiDictProxy
 
 
 @dataclass
@@ -12,13 +12,14 @@ class Request:
     method: str
     path: str
     query_string: str
-    headers: dict[str, str]
+    headers: CIMultiDictProxy[str, str]
     body: str
     parameters: dict[str, Any]
 
     @classmethod
     def from_event(cls, event):
         http = event["http"]
+        headers = CIMultiDictProxy(CIMultiDict(http["headers"]))
         body = http["body"]
         if http.get("isBase64Encoded", False):
             body = b64decode(body)
@@ -27,7 +28,7 @@ class Request:
             method=http["method"],
             path=http["path"],
             query_string=http["queryString"],
-            headers=http["headers"],
+            headers=headers,
             body=body,
             parameters={
                 k: v
@@ -63,7 +64,6 @@ def function(func):
         request = Request.from_event(event)
         result = func(request)
         return process_response(result)
-
     return wrapper
 
 
