@@ -38,13 +38,13 @@ class Request:
         )
 
     @cached_property
-    def query_params(self):
+    def query_params(self) -> MultiDictProxy:
         return MultiDictProxy(MultiDict(parse_qsl(self.query_string)))
 
-    def json(self):
+    def json(self) -> dict[str, Any]:
         return json.loads(self.body)
 
-    def form(self):
+    def form(self) -> dict[str, Any]:
         return MultiDictProxy(MultiDict(parse_qsl(self.body)))
 
 
