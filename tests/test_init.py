@@ -1,36 +1,16 @@
 from base64 import b64encode
 
-from pydoftk import process_response, ParsedWebEvent, RawWebEvent, Response
+from pydoftk import process_response, Request, Response
 
 
-def test_parsed_web_event():
-    event_data = {
-        "__ow_headers": None,
-        "__ow_method": None,
-        "__ow_path": None,
-        "http": {
-            "headers": {"content-type": "application/json"},
-            "method": "GET",
-            "path": "/path",
-        },
-        "foo": "bar",
-    }
-
-    event = ParsedWebEvent.from_event(event_data)
-
-    assert event.headers == event_data["http"]["headers"]
-    assert event.method == event_data["http"]["method"]
-    assert event.path == event_data["http"]["path"]
-    assert event.data == {"foo": "bar"}
-
-
-def test_raw_web_event():
-    encoded_body = b64encode(b"hello world")
+def test_request():
+    body = "Hello World!"
+    encoded_body = b64encode(body.encode())
 
     event_data = {
-        "__ow_headers": None,
-        "__ow_method": None,
-        "__ow_path": None,
+        "__ow_headers": {},
+        "__ow_method": "",
+        "__ow_path": "",
         "http": {
             "body": encoded_body,
             "headers": {"content-type": "application/json"},
@@ -42,19 +22,16 @@ def test_raw_web_event():
         "foo": "bar",
     }
 
-    event = RawWebEvent.from_event(event_data)
+    event = Request.from_event(event_data)
 
-    assert event.body == event_data["http"]["body"]
+    assert event.body == body
     assert event.headers == event_data["http"]["headers"]
-    assert event.is_base64_encoded == event_data["http"]["isBase64Encoded"]
     assert event.method == event_data["http"]["method"]
     assert event.path == event_data["http"]["path"]
     assert event.query_string == event_data["http"]["queryString"]
     assert event.parameters == {"foo": "bar"}
 
-    assert event.content_type == "application/json"
-    assert event.query_params == {"a": ["1"]}
-    assert event.decoded_body == b"hello world"
+    assert dict(event.query_params) == {"a": "1"}
 
 
 class TestProcessResponse:

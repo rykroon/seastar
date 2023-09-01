@@ -1,6 +1,6 @@
 from base64 import b64decode
 from dataclasses import dataclass
-from functools import cached_property
+from functools import cached_property, wraps
 import json
 from typing import Any
 from urllib.parse import parse_qsl
@@ -22,7 +22,7 @@ class Request:
         headers = CIMultiDictProxy(CIMultiDict(http["headers"]))
         body = http["body"]
         if http.get("isBase64Encoded", False):
-            body = b64decode(body)
+            body = b64decode(body).decode()
 
         return cls(
             method=http["method"],
@@ -41,10 +41,6 @@ class Request:
     def query_params(self):
         return MultiDictProxy(MultiDict(parse_qsl(self.query_string)))
 
-    @cached_property
-    def content_type(self):
-        return self.headers.get("content-type")
-
     def json(self):
         return json.loads(self.body)
 
@@ -60,6 +56,7 @@ class Response:
 
 
 def function(func):
+    @wraps(func)
     def wrapper(event):
         request = Request.from_event(event)
         result = func(request)
