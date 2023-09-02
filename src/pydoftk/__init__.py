@@ -1,17 +1,18 @@
 from base64 import b64decode
 from dataclasses import dataclass
-from functools import cached_property, wraps
+from functools import wraps
 import json
-from typing import Any
+from typing import Any, Optional
 from urllib.parse import parse_qsl
+
 from multidict import MultiDict, MultiDictProxy, CIMultiDict, CIMultiDictProxy
 
 
-@dataclass
+@dataclass(frozen=True)
 class Request:
     method: str
     path: str
-    query_string: str
+    query_params: MultiDictProxy[str, str]
     headers: CIMultiDictProxy[str, str]
     body: str
     parameters: dict[str, Any]
@@ -19,6 +20,7 @@ class Request:
     @classmethod
     def from_event(cls, event):
         http = event["http"]
+        query_params = MultiDictProxy(MultiDict(parse_qsl(http["queryString"])))
         headers = CIMultiDictProxy(CIMultiDict(http["headers"]))
         body = http["body"]
         if http.get("isBase64Encoded", False):
@@ -27,7 +29,7 @@ class Request:
         return cls(
             method=http["method"],
             path=http["path"],
-            query_string=http["queryString"],
+            query_params=query_params,
             headers=headers,
             body=body,
             parameters={
@@ -36,10 +38,6 @@ class Request:
                 if not k.startswith("__ow") and k != "http"
             },
         )
-
-    @cached_property
-    def query_params(self) -> MultiDictProxy:
-        return MultiDictProxy(MultiDict(parse_qsl(self.query_string)))
 
     def json(self) -> dict[str, Any]:
         return json.loads(self.body)
@@ -51,8 +49,8 @@ class Request:
 @dataclass
 class Response:
     body: Any
-    status_code: int | None = None
-    headers: dict[str, str] | None = None
+    status_code: Optional[int] = None
+    headers: Optional[dict[str, str]] = None
 
 
 def function(func):
@@ -78,10 +76,9 @@ def process_response(resp):
     elif not isinstance(resp, tuple):
         return {"body": resp}
 
-    match len(resp):
-        case 1:
-            return {"body": resp[0]}
-        case 2:
-            return {"body": resp[0], "statusCode": resp[1]}
-        case 3:
-            return {"body": resp[0], "statusCode": resp[1], "headers": resp[2]}
+    if len(resp) == 1:
+        return {"body": resp[0]}
+    if len(resp) == 2:
+        return {"body": resp[0], "statusCode": resp[1]}
+    if len(resp) == 3:
+        return {"body": resp[0], "statusCode": resp[1], "headers": resp[2]}
