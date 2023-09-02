@@ -1,37 +1,94 @@
-from base64 import b64encode
+from base64 import b64decode
 
-from pydoftk import process_response, Request, Response
+from pydoftk import process_response, Request, Response, function
 
 
-def test_request():
-    body = "Hello World!"
-    encoded_body = b64encode(body.encode())
+class TestRequest:
+    def test_get(self):
+        event = {
+            "http": {
+                "body": "",
+                "headers": {},
+                "method": "GET",
+                "path": "",
+                "queryString": "a=1",
+            }
+        }
 
-    event_data = {
-        "__ow_headers": {},
-        "__ow_method": "",
-        "__ow_path": "",
-        "http": {
-            "body": encoded_body,
-            "headers": {"content-type": "application/json"},
-            "isBase64Encoded": True,
-            "method": "GET",
-            "path": "/path",
-            "queryString": "a=1",
-        },
-        "foo": "bar",
-    }
+        request = Request.from_event(event)
+        assert request.body == event["http"]["body"]
+        assert request.headers == event["http"]["headers"]
+        assert request.method == event["http"]["method"]
+        assert request.path == event["http"]["path"]
+        assert dict(request.query_params) == {"a": "1"}
 
-    event = Request.from_event(event_data)
 
-    assert event.body == body
-    assert event.headers == event_data["http"]["headers"]
-    assert event.method == event_data["http"]["method"]
-    assert event.path == event_data["http"]["path"]
-    assert event.query_string == event_data["http"]["queryString"]
-    assert event.parameters == {"foo": "bar"}
+    def test_post_with_json(self):
+        event = {
+            "http": {
+                "body": '{"a": 1}',
+                "headers": {
+                    "content-type": "application/json",
+                },
+                "isBase64Encoded": False,
+                "method": "POST",
+                "path": "",
+                "queryString": "",
+            }
+        }
 
-    assert dict(event.query_params) == {"a": "1"}
+        request = Request.from_event(event)
+        assert request.body == event["http"]["body"]
+        assert request.headers == event["http"]["headers"]
+        assert request.method == event["http"]["method"]
+        assert request.path == event["http"]["path"]
+        assert dict(request.query_params) == {}
+        assert request.json() == {"a": 1}
+
+
+    def test_post_with_form(self):
+        event = {
+            "http": {
+                "body": "a=1",
+                "headers": {
+                    "content-type": "application/x-www-form-urlencoded",
+                },
+                "isBase64Encoded": False,
+                "method": "POST",
+                "path": "",
+                "queryString": "",
+            }
+        }
+
+        request = Request.from_event(event)
+        assert request.body == event["http"]["body"]
+        assert request.headers == event["http"]["headers"]
+        assert request.method == event["http"]["method"]
+        assert request.path == event["http"]["path"]
+        assert dict(request.query_params) == {}
+        assert dict(request.form()) == {"a": "1"}
+
+
+    def test_post_with_binary(self):
+        event = {
+            "http": {
+                "body": "SGVsbG8gV29ybGQ=",
+                "headers": {
+                    "content-type": "application/octet-stream",
+                },
+                "isBase64Encoded": True,
+                "method": "POST",
+                "path": "",
+                "queryString": "",
+            }
+        }
+
+        request = Request.from_event(event)
+        assert request.body == b64decode(event["http"]["body"]).decode()
+        assert request.headers == event["http"]["headers"]
+        assert request.method == event["http"]["method"]
+        assert request.path == event["http"]["path"]
+        assert dict(request.query_params) == {}
 
 
 class TestProcessResponse:
@@ -41,11 +98,11 @@ class TestProcessResponse:
     def test_response_body(self):
         result = Response("Hello World")
         assert process_response(result) == {"body": "Hello World"}
-    
+
     def test_response_status_code(self):
         result = Response("Hello World", status_code=200)
         assert process_response(result) == {"body": "Hello World", "statusCode": 200}
-    
+
     def test_response_headers(self):
         result = Response("Hello World", status_code=200, headers={"foo": "bar"})
         assert process_response(result) == {
@@ -69,3 +126,24 @@ class TestProcessResponse:
             "statusCode": 200,
             "headers": {"foo": "bar"},
         }
+
+
+def test_function_decorator():
+    @function
+    def my_function(request):
+        assert isinstance(request, Request)
+        return "Hello World"
+
+    event = {
+        "http": {
+            "body": "",
+            "headers": {},
+            "method": "GET",
+            "path": "",
+            "queryString": "a=1",
+        }
+    }
+
+    result = my_function(event)
+    assert isinstance(result, dict)
+    assert result["body"] == "Hello World"
