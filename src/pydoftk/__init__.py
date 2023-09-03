@@ -57,12 +57,33 @@ def function(func):
     @wraps(func)
     def wrapper(event):
         request = Request.from_event(event)
-        result = func(request)
+        try:
+            result = func(request)
+
+        except Exception as e:
+            print(EXCEPTION_HANDLERS)
+            for exc_class in type(e).mro()[:-2]:
+                if exc_class in EXCEPTION_HANDLERS:
+                    result = EXCEPTION_HANDLERS[exc_class](request, e)
+                    break
+            else:
+                raise e
+
         return process_response(result)
     return wrapper
 
 
-def process_response(resp):
+EXCEPTION_HANDLERS = {}
+
+
+def error_handler(exc_class: type[Exception], /):
+    def decorator(func):
+        EXCEPTION_HANDLERS[exc_class] = func
+        return func
+    return decorator
+
+
+def process_response(resp): # rename to make_response()
     if isinstance(resp, Response):
         result = {"body": resp.body}
         if resp.status_code is not None:
