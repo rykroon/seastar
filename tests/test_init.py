@@ -1,9 +1,15 @@
 from base64 import b64decode
 
 from pydoftk import (
-    process_response, Request, Response, function, error_handler, EXCEPTION_HANDLERS
+    process_response,
+    Request,
+    Response,
+    function,
+    error_handler,
+    EXCEPTION_HANDLERS,
 )
 import pytest
+
 
 @pytest.fixture(autouse=True)
 def clear_exceptions():
@@ -29,7 +35,6 @@ class TestRequest:
         assert request.path == event["http"]["path"]
         assert dict(request.query_params) == {"a": "1"}
 
-
     def test_post_with_json(self):
         event = {
             "http": {
@@ -52,7 +57,6 @@ class TestRequest:
         assert dict(request.query_params) == {}
         assert request.json() == {"a": 1}
 
-
     def test_post_with_form(self):
         event = {
             "http": {
@@ -74,7 +78,6 @@ class TestRequest:
         assert request.path == event["http"]["path"]
         assert dict(request.query_params) == {}
         assert dict(request.form()) == {"a": "1"}
-
 
     def test_post_with_binary(self):
         event = {
@@ -168,7 +171,7 @@ class TestErrorHandler:
         def my_function(request):
             assert isinstance(request, Request)
             raise RuntimeError
-        
+
         event = {
             "http": {
                 "body": "",
@@ -178,7 +181,7 @@ class TestErrorHandler:
                 "queryString": "a=1",
             }
         }
-        
+
         result = my_function(event)
         assert result["body"] == "Error!"
         assert result["statusCode"] == 500
@@ -188,6 +191,7 @@ class TestErrorHandler:
         The error handler handles the built-in Exception class.
         But it should still catch errors that are subclasses.
         """
+
         @error_handler(Exception)
         def handle_exception(request, exc):
             assert isinstance(request, Request)
@@ -208,7 +212,7 @@ class TestErrorHandler:
                 "queryString": "a=1",
             }
         }
-        
+
         result = my_function(event)
         assert result["body"] == "Error!"
         assert result["statusCode"] == 500
@@ -218,6 +222,7 @@ class TestErrorHandler:
         The error handler handles the built-in Exception class.
         But it should still catch errors that are subclasses.
         """
+
         @function
         def my_function(request):
             assert isinstance(request, Request)
@@ -232,6 +237,6 @@ class TestErrorHandler:
                 "queryString": "a=1",
             }
         }
-        
+
         with pytest.raises(Exception):
             my_function(event)

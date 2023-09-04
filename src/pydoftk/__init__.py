@@ -70,6 +70,7 @@ def function(func):
                 raise e
 
         return process_response(result)
+
     return wrapper
 
 
@@ -80,10 +81,11 @@ def error_handler(exc_class: type[Exception], /):
     def decorator(func):
         EXCEPTION_HANDLERS[exc_class] = func
         return func
+
     return decorator
 
 
-def process_response(resp): # rename to make_response()
+def process_response(resp):  # rename to make_response()
     if isinstance(resp, Response):
         result = {"body": resp.body}
         if resp.status_code is not None:
