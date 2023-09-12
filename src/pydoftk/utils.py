@@ -3,7 +3,7 @@ from typing import Any, Callable
 
 from .errors import EXCEPTION_HANDLERS
 from .requests import Request
-from .responses import make_response
+from .responses import Response
 
 
 def function(
@@ -23,6 +23,5 @@ def function(
             else:
                 raise e
 
-        return make_response(result)
-
+        return Response.from_any(result).to_dict()
     return wrapper

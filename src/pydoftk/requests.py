@@ -21,7 +21,15 @@ class Request:
 
     @classmethod
     def from_event(cls: type[Self], event: dict[str, Any]) -> Self:
+        if "http" not in event:
+            # Not a web event.
+            ...
+
         http = event["http"]
+        if "body" not in http or "queryString" not in http:
+            # not a raw web event.
+            ...
+
         query_params = MultiDictProxy(MultiDict(parse_qsl(http["queryString"])))
         headers = CIMultiDictProxy(CIMultiDict(http["headers"]))
         body = http["body"]
