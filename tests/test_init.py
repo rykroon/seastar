@@ -1,7 +1,7 @@
 from base64 import b64decode
 
 from pydoftk import (
-    process_response,
+    make_response,
     Request,
     Response,
     function,
@@ -103,19 +103,19 @@ class TestRequest:
 
 class TestProcessResponse:
     def test_any(self):
-        assert process_response("Hello World") == {"body": "Hello World"}
+        assert make_response("Hello World") == {"body": "Hello World"}
 
     def test_response_body(self):
         result = Response("Hello World")
-        assert process_response(result) == {"body": "Hello World"}
+        assert make_response(result) == {"body": "Hello World"}
 
     def test_response_status_code(self):
         result = Response("Hello World", status_code=200)
-        assert process_response(result) == {"body": "Hello World", "statusCode": 200}
+        assert make_response(result) == {"body": "Hello World", "statusCode": 200}
 
     def test_response_headers(self):
         result = Response("Hello World", status_code=200, headers={"foo": "bar"})
-        assert process_response(result) == {
+        assert make_response(result) == {
             "body": "Hello World",
             "statusCode": 200,
             "headers": {"foo": "bar"},
@@ -123,15 +123,15 @@ class TestProcessResponse:
 
     def test_one_tuple(self):
         result = ("Hello World",)
-        assert process_response(result) == {"body": "Hello World"}
+        assert make_response(result) == {"body": "Hello World"}
 
     def test_two_tuple(self):
         result = ("Hello World", 200)
-        assert process_response(result) == {"body": "Hello World", "statusCode": 200}
+        assert make_response(result) == {"body": "Hello World", "statusCode": 200}
 
     def test_three_tuple(self):
         result = ("Hello World", 200, {"foo": "bar"})
-        assert process_response(result) == {
+        assert make_response(result) == {
             "body": "Hello World",
             "statusCode": 200,
             "headers": {"foo": "bar"},
