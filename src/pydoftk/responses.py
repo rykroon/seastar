@@ -27,10 +27,10 @@ class Response:
         result = {"body": self.body}
         if self.status_code is not None:
             result["statusCode"] = self.status_code
-        
+
         if self.headers is not None:
             result["headers"] = self.headers
-        
+
         return result
 
 

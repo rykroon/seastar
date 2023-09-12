@@ -1,4 +1,3 @@
-
 from functools import wraps
 from typing import Any, Callable
 
@@ -27,6 +26,3 @@ def function(
         return make_response(result)
 
     return wrapper
-
-
-
