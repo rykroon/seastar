@@ -5,7 +5,7 @@ from urllib.parse import parse_qsl
 from typing import Any, TypeVar
 
 from multidict import MultiDict, MultiDictProxy, CIMultiDict, CIMultiDictProxy
-
+from .exceptions import ConfigurationError
 
 Self = TypeVar("Self", bound="Request")
 
@@ -23,12 +23,12 @@ class Request:
     def from_event(cls: type[Self], event: dict[str, Any]) -> Self:
         if "http" not in event:
             # Not a web event.
-            ...
+            raise ConfigurationError("Not a web event.")
 
         http = event["http"]
         if "body" not in http or "queryString" not in http:
             # not a raw web event.
-            ...
+            raise ConfigurationError("Not a raw web event.")
 
         query_params = MultiDictProxy(MultiDict(parse_qsl(http["queryString"])))
         headers = CIMultiDictProxy(CIMultiDict(http["headers"]))

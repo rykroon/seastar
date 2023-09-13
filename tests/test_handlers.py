@@ -1,4 +1,5 @@
-from pydoftk import error_handler, function, Request, EXCEPTION_HANDLERS
+from pydoftk import exception_handler, function, Request, EXCEPTION_HANDLERS, HttpException
+from pydoftk.handlers import http_handler, default_handler
 import pytest
 
 
@@ -7,9 +8,22 @@ def clear_exceptions():
     EXCEPTION_HANDLERS.clear()
 
 
+def test_http_handler():
+    exc = HttpException(400, "shit!")
+    result = http_handler(None, exc)
+    assert result == ("shit!", 400, None)
+
+
+def test_default_handler():
+    exc = Exception("shit")
+    result = default_handler(None, exc)
+    assert result == ("Internal Server Error", 500)
+
+
+
 class TestErrorHandler:
     def test_catch_exception(self):
-        @error_handler(RuntimeError)
+        @exception_handler(RuntimeError)
         def handle_exception(request, exc):
             assert isinstance(request, Request)
             assert isinstance(exc, Exception)
@@ -40,7 +54,7 @@ class TestErrorHandler:
         But it should still catch errors that are subclasses.
         """
 
-        @error_handler(Exception)
+        @exception_handler(Exception)
         def handle_exception(request, exc):
             assert isinstance(request, Request)
             assert isinstance(exc, Exception)

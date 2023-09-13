@@ -1,4 +1,4 @@
-from .errors import error_handler, EXCEPTION_HANDLERS
+from .handlers import exception_handler, EXCEPTION_HANDLERS
 from .exceptions import HttpException
 from .requests import Request
 from .responses import Response
@@ -9,7 +9,7 @@ __all__ = [
     "Request",
     "Response",
     "function",
-    "error_handler",
+    "exception_handler",
     "HttpException",
     "EXCEPTION_HANDLERS",
 ]

@@ -1,8 +1,25 @@
 from base64 import b64decode
+import pytest
+
 from pydoftk import Request
+from pydoftk.exceptions import ConfigurationError
 
 
 class TestRequest:
+
+    def test_configuration_error(self):
+        event = {}
+
+        with pytest.raises(ConfigurationError):
+            Request.from_event(event)
+    
+        event = {
+            "http": {"headers": {}, "method": "GET", "Path": ""}
+        }
+
+        with pytest.raises(ConfigurationError):
+            Request.from_event(event)
+
     def test_get(self):
         event = {
             "http": {

@@ -1,7 +1,7 @@
 from functools import wraps
 from typing import Any, Callable
 
-from .errors import EXCEPTION_HANDLERS
+from .handlers import EXCEPTION_HANDLERS
 from .requests import Request
 from .responses import Response
 
