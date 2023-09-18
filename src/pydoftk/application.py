@@ -41,7 +41,10 @@ class Application:
             else:
                 raise e
 
-        return Response.from_any(result).to_dict()
+        if not isinstance(result, Response):
+            result = Response.from_any(result)
+        
+        return result.to_dict()
 
     def route(self, path: str, /, methods: list[str]):
         def decorator(func):
