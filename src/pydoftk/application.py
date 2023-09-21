@@ -2,10 +2,10 @@ from dataclasses import dataclass, field
 from typing import Callable
 
 from .exceptions import HttpException
-from .handlers import default_handler, http_handler
+from .middleware import ServerErrorMiddleware, ExceptionMiddleware
 from .requests import Request
 from .responses import Response
-from .routes import Route
+from .routes import Route, Router
 
 
 @dataclass
@@ -15,8 +15,23 @@ class Application:
     exception_handlers: dict[type[Exception], Callable] = field(default_factory=dict)
 
     def __post_init__(self):
-        self.exception_handler(Exception)(default_handler)
-        self.exception_handler(HttpException)(http_handler)
+        exception_handlers = {}
+        error_handler = None
+        for k, v in self.exception_handler.items():
+            if k in (500, Exception):
+                error_handler = v
+            else:
+                exception_handlers[k] = v
+    
+        server_error_mw = ServerErrorMiddleware(self, error_handler=error_handler, debug=self.debug)
+
+        router = Router(self.routes)
+        app = router
+        app = ...
+        ...
+    
+    def build_middleware_stack(self):
+        ...
 
     def __call__(self, event):
         try:

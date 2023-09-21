@@ -2,3 +2,9 @@
 #
 # SPDX-License-Identifier: MIT
 __version__ = "0.3.0"
+
+
+"""
+- rename project to seastar. A play on Starlette and Digital Ocean.
+
+"""

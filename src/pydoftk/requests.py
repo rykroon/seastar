@@ -5,7 +5,6 @@ from urllib.parse import parse_qsl
 from typing import Any, TypeVar
 
 from multidict import MultiDict, MultiDictProxy, CIMultiDict, CIMultiDictProxy
-from .exceptions import ConfigurationError
 
 Self = TypeVar("Self", bound="Request")
 
@@ -16,32 +15,24 @@ class Request:
     path: str
     query_params: MultiDictProxy[str]
     headers: CIMultiDictProxy[str]
-    body: str
+    _body: str
+    _is_base64_encoded: bool
     parameters: dict[str, Any]
 
     @classmethod
     def from_event(cls: type[Self], event: dict[str, Any]) -> Self:
-        if "http" not in event:
-            # Not a web event.
-            raise ConfigurationError("Not a web event.")
-
+        assert "http" in event
         http = event["http"]
-        if "body" not in http or "queryString" not in http:
-            # not a raw web event.
-            raise ConfigurationError("Not a raw web event.")
-
         query_params = MultiDictProxy(MultiDict(parse_qsl(http["queryString"])))
         headers = CIMultiDictProxy(CIMultiDict(http["headers"]))
-        body = http["body"]
-        if http.get("isBase64Encoded", False):
-            body = b64decode(body).decode()
 
         return cls(
             method=http["method"],
             path=http["path"],
             query_params=query_params,
             headers=headers,
-            body=body,
+            _body=http["body"],
+            _is_base64_encoded=http.get("isBase64Encoded", False),
             parameters={
                 k: v
                 for k, v in event.items()
@@ -49,8 +40,13 @@ class Request:
             },
         )
 
+    def body(self):
+        if not self._is_base64_encoded:
+            return self._body
+        return b64decode(self._body)
+
     def json(self) -> Any:
-        return json.loads(self.body)
+        return json.loads(self.body())
 
     def form(self) -> MultiDictProxy[Any]:
-        return MultiDictProxy(MultiDict(parse_qsl(self.body)))
+        return MultiDictProxy(MultiDict(parse_qsl(self.body())))
