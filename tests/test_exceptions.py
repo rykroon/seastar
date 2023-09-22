@@ -1,4 +1,4 @@
-from pydoftk.exceptions import HttpException
+from seastar.exceptions import HttpException
 
 
 class TestHttpException:

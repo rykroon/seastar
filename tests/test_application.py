@@ -1,4 +1,4 @@
-from pydoftk import Application, Route
+from seastar import Application, Route
 
 import pytest
 

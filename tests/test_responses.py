@@ -1,4 +1,4 @@
-from pydoftk import Response
+from seastar import Response
 
 
 class TestProcessResponse:

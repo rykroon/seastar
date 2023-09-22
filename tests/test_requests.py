@@ -1,8 +1,8 @@
 from base64 import b64decode
 import pytest
 
-from pydoftk import Request
-from pydoftk.exceptions import ConfigurationError
+from seastar import Request
+from seastar.exceptions import ConfigurationError
 
 
 class TestRequest:

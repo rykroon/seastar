@@ -1,4 +1,4 @@
-from pydoftk import Request, function
+from seastar import Request, function
 
 
 def test_function_decorator():

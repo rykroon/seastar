@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "pydoftk"
+name = "seastar"
 dynamic = ["version"]
 description = 'Python Digital Ocean Function Tool Kit'
 readme = "README.md"
@@ -26,12 +26,12 @@ dependencies = [
 ]
 
 [project.urls]
-Documentation = "https://github.com/rykroon/pydoftk#readme"
-Issues = "https://github.com/rykroon/pydoftk/issues"
-Source = "https://github.com/rykroon/pydoftk"
+Documentation = "https://github.com/rykroon/seastar#readme"
+Issues = "https://github.com/rykroon/seastar/issues"
+Source = "https://github.com/rykroon/seastar"
 
 [tool.hatch.version]
-path = "src/pydoftk/__about__.py"
+path = "src/seastar/__about__.py"
 
 [tool.hatch.envs.test]
 dependencies = [
@@ -51,7 +51,7 @@ dependencies = [
   "mypy"
 ]
 [tool.hatch.envs.type.scripts]
-check = "mypy --strict src/pydoftk"
+check = "mypy --strict src/seastar"
 
 [tool.hatch.envs.docs]
 python="3.11"

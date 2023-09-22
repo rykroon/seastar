@@ -1,7 +1,7 @@
-# pydoftk
+# seastar
 
-[![PyPI - Version](https://img.shields.io/pypi/v/pydoftk.svg)](https://pypi.org/project/pydoftk)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pydoftk.svg)](https://pypi.org/project/pydoftk)
+[![PyPI - Version](https://img.shields.io/pypi/v/seastar.svg)](https://pypi.org/project/seastar)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/seastar.svg)](https://pypi.org/project/seastar)
 
 -----
 
@@ -13,9 +13,9 @@
 ## Installation
 
 ```console
-pip install pydoftk
+pip install seastar
 ```
 
 ## License
 
-`pydoftk` is distributed under the terms of the [MIT](https://spdx.org/licenses/MIT.html) license.
+`seastar` is distributed under the terms of the [MIT](https://spdx.org/licenses/MIT.html) license.

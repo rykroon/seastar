@@ -1,5 +1,5 @@
-from pydoftk import exception_handler, function, Request, EXCEPTION_HANDLERS, HttpException
-from pydoftk.handlers import http_handler, default_handler
+from seastar import exception_handler, function, Request, EXCEPTION_HANDLERS, HttpException
+from seastar.handlers import http_handler, default_handler
 import pytest
 
 
