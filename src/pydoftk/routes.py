@@ -49,27 +49,25 @@ class Route:
 class Router:
     routes: list[Route]
 
-    def __post_init__(self):
-        self.routes = sorted(self.routes)
-
     def __call__(self, event, context):
         path = event["http"]["path"]
         method = event["http"]["method"]
 
+        status_code = 404
         for route in self.routes:
             if path != route.path:
                 continue
 
             if method not in route.methods:
-                raise HttpException(405)
+                status_code = 405
+                continue
 
             break
 
         else:
-            raise HttpException(404)
+            raise HttpException(status_code)
 
         return route.endpoint(event, context)
 
     def add_route(self, route: Route):
         self.routes.append(route)
-        self.routes = sorted(self.routes)

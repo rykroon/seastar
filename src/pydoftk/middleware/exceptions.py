@@ -1,0 +1,76 @@
+from dataclasses import dataclass
+from http import HTTPStatus
+from typing import Optional, Union
+
+from pydoftk.exceptions import HttpException
+from pydoftk.requests import Request
+from pydoftk.responses import Response
+from pydoftk.types import App, ExceptionHandler, HttpExceptionHandler
+
+
+@dataclass
+class ExceptionMiddleware:
+    app: App
+    exception_handlers: dict[
+        Union[type[Exception], int], Union[ExceptionHandler, HttpExceptionHandler]
+    ]
+
+    def __call__(self, event, context):
+        try:
+            return self.app(event, context)
+
+        except Exception as e:
+            handler = self.lookup_handler(e)
+            if handler is None:
+                raise e
+
+            if "http" in event:
+                request = Request.from_event_context(event, context)
+                response = handler(request, e)
+                return response()
+
+            return handler(event, context, e)
+
+    @classmethod
+    def create_server_error_middleware(
+        cls,
+        app: App,
+        handler: Optional[HttpExceptionHandler] = None,
+        debug: bool = False
+    ):
+        """
+            Instead of creating a separate ServerError Middleware.
+            Just use ExceptionMiddleware.
+        """
+        if debug:
+            handler = cls.debug_response
+
+        elif handler is not None:
+            handler = cls.error_response
+
+        return cls(app=app, exception_handlers={Exception: handler})
+
+    def lookup_handler(self, exc: Exception) -> Optional[ExceptionHandler]:
+        if isinstance(exc, HttpException):
+            if exc.status_code in self.exception_handlers:
+                return self.exception_handlers[exc.status_code]
+
+        for exc_class in type(exc).mro()[:-2]:
+            if exc_class in self.exception_handlers:
+                return self.exception_handlers[exc_class]
+
+        return None
+    
+    def add_exception_handler(
+        self, key: Union[type[Exception], int], handler: ExceptionHandler
+    ):
+        self.exception_handlers[key] = handler
+
+    @staticmethod
+    def debug_response(request: Request, exc: Exception) -> Response:
+        return Response(body=str(exc), status_code=500)
+
+    @staticmethod
+    def error_response(request: Request, exc: Exception) -> Response:
+        status = HTTPStatus(500)
+        return Response(status.phrase, status.value)
