@@ -37,7 +37,7 @@ class Route:
             raise HttpException(404)
 
         if event["http"]["method"] not in self.methods:
-            return HttpException(405)
+            raise HttpException(405)
 
         return self.endpoint(event, context)
 

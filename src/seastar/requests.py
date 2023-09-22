@@ -26,7 +26,9 @@ class Request:
     ) -> Self:
         assert "http" in event
         http = event["http"]
-        query_params = MultiDictProxy(MultiDict(parse_qsl(http["queryString"])))
+
+        query_string = http.get("queryString", "")
+        query_params = MultiDictProxy(MultiDict(parse_qsl(query_string)))
         headers = CIMultiDictProxy(CIMultiDict(http["headers"]))
 
         return cls(
@@ -34,7 +36,7 @@ class Request:
             path=http["path"],
             query_params=query_params,
             headers=headers,
-            _body=http["body"],
+            _body=http.get("body"),
             _is_base64_encoded=http.get("isBase64Encoded", False),
             parameters={
                 k: v
