@@ -2,10 +2,10 @@ from dataclasses import dataclass
 from http import HTTPStatus
 from typing import Optional, Union
 
-from pydoftk.exceptions import HttpException
-from pydoftk.requests import Request
-from pydoftk.responses import Response
-from pydoftk.types import App, ExceptionHandler, HttpExceptionHandler
+from seastar.exceptions import HttpException
+from seastar.requests import Request
+from seastar.responses import Response
+from seastar.types import App, ExceptionHandler, HttpExceptionHandler
 
 
 @dataclass

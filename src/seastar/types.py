@@ -1,7 +1,7 @@
 from typing import Any, Callable
 
-from pydoftk.requests import Request
-from pydoftk.responses import Response
+from seastar.requests import Request
+from seastar.responses import Response
 
 
 App = Callable[[dict[str, Any], dict[str, Any]], Any]
