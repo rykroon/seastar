@@ -7,7 +7,6 @@ from .routes import Route
 from .utils import function
 
 
-
 __all__ = [
     "Application",
     "Request",

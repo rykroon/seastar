@@ -11,14 +11,14 @@ class TestRequest:
         event = {}
 
         with pytest.raises(ConfigurationError):
-            Request.from_event(event)
+            Request.from_event_context(event)
     
         event = {
             "http": {"headers": {}, "method": "GET", "Path": ""}
         }
 
         with pytest.raises(ConfigurationError):
-            Request.from_event(event)
+            Request.from_event_context(event)
 
     def test_get(self):
         event = {
@@ -31,7 +31,7 @@ class TestRequest:
             }
         }
 
-        request = Request.from_event(event)
+        request = Request.from_event_context(event)
         assert request.body == event["http"]["body"]
         assert request.headers == event["http"]["headers"]
         assert request.method == event["http"]["method"]
@@ -52,7 +52,7 @@ class TestRequest:
             }
         }
 
-        request = Request.from_event(event)
+        request = Request.from_event_context(event)
         assert request.body == event["http"]["body"]
         assert request.headers == event["http"]["headers"]
         assert request.method == event["http"]["method"]
@@ -74,7 +74,7 @@ class TestRequest:
             }
         }
 
-        request = Request.from_event(event)
+        request = Request.from_event_context(event)
         assert request.body == event["http"]["body"]
         assert request.headers == event["http"]["headers"]
         assert request.method == event["http"]["method"]
@@ -96,7 +96,7 @@ class TestRequest:
             }
         }
 
-        request = Request.from_event(event)
+        request = Request.from_event_context(event)
         assert request.body == b64decode(event["http"]["body"]).decode()
         assert request.headers == event["http"]["headers"]
         assert request.method == event["http"]["method"]

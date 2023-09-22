@@ -1,53 +1,75 @@
 from dataclasses import dataclass
-from http import HTTPStatus
+from functools import wraps
+import inspect
 from typing import Callable
 
+from .exceptions import HttpException
+from .requests import Request
 
-@dataclass
+
+"""
+    Routes are only applicable to web events.
+"""
+
+
+def request_response(func):
+    @wraps(func)
+    def wrapper(event, context):
+        request = Request.from_event_context(event, context)
+        response = func(request)
+        return response()
+
+    return wrapper
+
+
+@dataclass(order=True)
 class Route:
     path: str
-    func: Callable
     methods: list[str]
+    endpoint: Callable
 
     def __post_init__(self):
-        # wrap function in RequestResponseMiddleware.
-        ...
+        if inspect.isfunction(self.endpoint) or inspect.ismethod(self.endpoint):
+            self.endpoint = request_response(self.endpoint)
 
     def __call__(self, event, context):
-        path_match, method_match = self.matches(event)
-        if not path_match:
-            return {"body": HTTPStatus(404).phrase, "statusCode": 404}
+        if self.path != event["http"]["path"]:
+            raise HttpException(404)
 
-        if not method_match:
-            return {"body": HTTPStatus(405).phrase, "statusCode": 405}
+        if event["http"]["method"] not in self.methods:
+            return HttpException(405)
 
-        return self.func(event, context)
-    
-    def matches(self, event) -> tuple[bool, bool]:
-        path = event["http"]["path"]
-        method = event["http"]["method"]
-        return self.path == path, method in self.methods
+        return self.endpoint(event, context)
+
+    def matches(self, path: str, method: str):
+        return path == self.path, method in self.methods
 
 
 @dataclass
 class Router:
     routes: list[Route]
 
+    def __post_init__(self):
+        self.routes = sorted(self.routes)
+
     def __call__(self, event, context):
+        path = event["http"]["path"]
+        method = event["http"]["method"]
+
         for route in self.routes:
-            path_match, method_match = route.matches(event)
-            if not path_match:
+            if path != route.path:
                 continue
 
-            if not method_match:
-                return {"body": HTTPStatus(405).phrase, "statusCode": 405}
+            if method not in route.methods:
+                raise HttpException(405)
 
             break
 
         else:
-            return {"body": HTTPStatus(404).phrase, "statusCode": 404}
+            raise HttpException(404)
 
-        return route.func(event, context)
+        return route.endpoint(event, context)
 
     def add_route(self, route: Route):
         self.routes.append(route)
+        self.routes = sorted(self.routes)
