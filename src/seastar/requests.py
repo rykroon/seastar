@@ -47,7 +47,7 @@ class Request:
     def body(self):
         if not self._is_base64_encoded:
             return self._body
-        return b64decode(self._body)
+        return b64decode(self._body).decode()
 
     def json(self) -> Any:
         return json.loads(self.body())

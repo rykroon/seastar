@@ -1,86 +1,92 @@
-from base64 import b64decode
+from base64 import b64decode, b64encode
+import json
 import pytest
 
 from seastar import Request
-from seastar.exceptions import ConfigurationError
+
+
+@pytest.fixture
+def get_event():
+    return {
+        "http": {
+            "body": "",
+            "headers": {},
+            "method": "GET",
+            "path": "",
+            "queryString": "a=1&b=2"
+        }
+    }
+
+@pytest.fixture
+def json_event():
+    body = json.dumps({"a": 1, "b": 2}).encode()
+    return {
+        "http": {
+            "body": b64encode(body).decode(),
+            "headers": {"content-type": "application/json"},
+            "isBase64Encoded": True,
+            "method": "POST",
+            "path": "",
+            "queryString": "",
+        }
+    }
+
+
+@pytest.fixture
+def form_event():
+    body = b"a=1&b=2"
+    return {
+        "http": {
+            "body": b64encode(body).decode(),
+            "headers": {
+                "content-type": "application/x-www-form-urlencoded",
+            },
+            "isBase64Encoded": True,
+            "method": "POST",
+            "path": "",
+            "queryString": "",
+        }
+    }
+
+
+def decode_body(event):
+    event["http"]["body"] = b64decode(event["http"]["body"])
+    event["http"]["isBase64Encoded"] = False
+    return event
 
 
 class TestRequest:
 
-    def test_configuration_error(self):
-        event = {}
-
-        with pytest.raises(ConfigurationError):
-            Request.from_event_context(event)
+    def test_get(self, get_event):
+        request = Request.from_event_context(get_event)
+        assert request._body == get_event["http"]["body"]
+        assert request.headers == get_event["http"]["headers"]
+        assert request.method == get_event["http"]["method"]
+        assert request.path == get_event["http"]["path"]
+        assert dict(request.query_params) == {"a": "1", "b": "2"}
     
-        event = {
-            "http": {"headers": {}, "method": "GET", "Path": ""}
-        }
-
-        with pytest.raises(ConfigurationError):
-            Request.from_event_context(event)
-
-    def test_get(self):
-        event = {
-            "http": {
-                "body": "",
-                "headers": {},
-                "method": "GET",
-                "path": "",
-                "queryString": "a=1",
-            }
-        }
-
+    def test_body_not_encoded(self, json_event):
+        event = decode_body(json_event)
         request = Request.from_event_context(event)
-        assert request.body == event["http"]["body"]
-        assert request.headers == event["http"]["headers"]
-        assert request.method == event["http"]["method"]
-        assert request.path == event["http"]["path"]
-        assert dict(request.query_params) == {"a": "1"}
+        assert request.body() == event["http"]["body"]
 
-    def test_post_with_json(self):
-        event = {
-            "http": {
-                "body": '{"a": 1}',
-                "headers": {
-                    "content-type": "application/json",
-                },
-                "isBase64Encoded": False,
-                "method": "POST",
-                "path": "",
-                "queryString": "",
-            }
-        }
-
-        request = Request.from_event_context(event)
-        assert request.body == event["http"]["body"]
-        assert request.headers == event["http"]["headers"]
-        assert request.method == event["http"]["method"]
-        assert request.path == event["http"]["path"]
+    def test_post_with_json(self, json_event):
+        request = Request.from_event_context(json_event)
+        assert request._body == json_event["http"]["body"]
+        assert request.headers == json_event["http"]["headers"]
+        assert request.method == json_event["http"]["method"]
+        assert request.path == json_event["http"]["path"]
         assert dict(request.query_params) == {}
-        assert request.json() == {"a": 1}
+        assert request.json() == {"a": 1, "b": 2}
 
-    def test_post_with_form(self):
-        event = {
-            "http": {
-                "body": "a=1",
-                "headers": {
-                    "content-type": "application/x-www-form-urlencoded",
-                },
-                "isBase64Encoded": False,
-                "method": "POST",
-                "path": "",
-                "queryString": "",
-            }
-        }
-
-        request = Request.from_event_context(event)
-        assert request.body == event["http"]["body"]
-        assert request.headers == event["http"]["headers"]
-        assert request.method == event["http"]["method"]
-        assert request.path == event["http"]["path"]
+    def test_post_with_form(self, form_event):
+        request = Request.from_event_context(form_event)
+        assert request._body == form_event["http"]["body"]
+        assert request.headers == form_event["http"]["headers"]
+        assert request.method == form_event["http"]["method"]
+        assert request.path == form_event["http"]["path"]
         assert dict(request.query_params) == {}
-        assert dict(request.form()) == {"a": "1"}
+        assert dict(request.form()) == {"a": "1", "b": "2"}
 
     def test_post_with_binary(self):
         event = {
@@ -97,7 +103,7 @@ class TestRequest:
         }
 
         request = Request.from_event_context(event)
-        assert request.body == b64decode(event["http"]["body"]).decode()
+        assert request._body == event["http"]["body"]
         assert request.headers == event["http"]["headers"]
         assert request.method == event["http"]["method"]
         assert request.path == event["http"]["path"]
