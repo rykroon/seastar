@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from http import HTTPStatus
 from typing import Optional, Union
 
@@ -13,7 +13,7 @@ class ExceptionMiddleware:
     app: App
     exception_handlers: dict[
         Union[type[Exception], int], Union[ExceptionHandler, HttpExceptionHandler]
-    ]
+    ] = field(default_factory=dict)
 
     def __call__(self, event, context):
         try:
@@ -45,7 +45,7 @@ class ExceptionMiddleware:
         if debug:
             handler = cls.debug_response
 
-        elif handler is not None:
+        elif handler is None:
             handler = cls.error_response
 
         return cls(app=app, exception_handlers={Exception: handler})
@@ -60,7 +60,7 @@ class ExceptionMiddleware:
                 return self.exception_handlers[exc_class]
 
         return None
-    
+
     def add_exception_handler(
         self, key: Union[type[Exception], int], handler: ExceptionHandler
     ):
@@ -68,6 +68,7 @@ class ExceptionMiddleware:
 
     @staticmethod
     def debug_response(request: Request, exc: Exception) -> Response:
+        # in the future this should return an html page with the traceback.
         return Response(body=str(exc), status_code=500)
 
     @staticmethod

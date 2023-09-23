@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import wraps
 import inspect
 from typing import Callable
@@ -47,7 +47,7 @@ class Route:
 
 @dataclass
 class Router:
-    routes: list[Route]
+    routes: list[Route] = field(default_factory=list)
 
     def __call__(self, event, context):
         path = event["http"]["path"]
