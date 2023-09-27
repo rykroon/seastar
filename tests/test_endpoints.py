@@ -17,6 +17,7 @@ def get_event():
         }
     }
 
+
 @pytest.fixture
 def post_event():
     return {
@@ -30,10 +31,8 @@ def post_event():
     }
 
 
-
 def test_endpoint(get_event, post_event):
     class MyEndpoint(Endpoint):
-
         def get(self, request):
             return Response("Hello World")
 

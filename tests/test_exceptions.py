@@ -6,7 +6,7 @@ class TestHttpException:
         exc = HttpException(400)
         assert exc.message == "Bad Request"
         assert exc.args == (400, "Bad Request")
-    
+
     def test_custom_message(self):
         exc = HttpException(400, "Shit!")
         assert exc.message == "Shit!"

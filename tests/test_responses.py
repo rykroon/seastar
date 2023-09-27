@@ -2,7 +2,6 @@ from seastar import Response
 
 
 class TestProcessResponse:
-
     def test_response_body(self):
         result = Response("Hello World")
         assert result() == {"body": "Hello World"}
