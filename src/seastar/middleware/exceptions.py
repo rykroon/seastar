@@ -36,11 +36,11 @@ class ExceptionMiddleware:
         cls,
         app: App,
         handler: Optional[HttpExceptionHandler] = None,
-        debug: bool = False
+        debug: bool = False,
     ):
         """
-            Instead of creating a separate ServerError Middleware.
-            Just use ExceptionMiddleware.
+        Instead of creating a separate ServerError Middleware.
+        Just use ExceptionMiddleware.
         """
         if debug:
             handler = cls.debug_response

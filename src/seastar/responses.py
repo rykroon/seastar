@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+from collections.abc import Mapping
+from dataclasses import dataclass, field
 from typing import Any, Optional
 
 from seastar.datastructures import MutableHeaders
@@ -8,10 +9,10 @@ from seastar.datastructures import MutableHeaders
 class Response:
     body: Any = None
     status_code: Optional[int] = None
-    headers: Optional[MutableHeaders[str, str]] = None
+    headers: Mapping[str, str] = field(default_factory=dict)
 
     def __post_init__(self):
-        if self.headers is not None and not isinstance(self.headers, MutableHeaders):
+        if not isinstance(self.headers, MutableHeaders):
             self.headers = MutableHeaders(self.headers)
 
     def __call__(self):

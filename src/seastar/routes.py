@@ -33,11 +33,13 @@ class Route:
             self.endpoint = request_response(self.endpoint)
 
     def __call__(self, event, context):
+        assert "http" in event, "Expected a web event."
         if self.path != event["http"]["path"]:
             raise HttpException(404)
 
         if event["http"]["method"] not in self.methods:
-            raise HttpException(405)
+            headers = {"Allow": ", ".join(self.methods)}
+            raise HttpException(405, headers=headers)
 
         return self.endpoint(event, context)
 
@@ -50,22 +52,25 @@ class Router:
     routes: list[Route] = field(default_factory=list)
 
     def __call__(self, event, context):
+        assert "http" in event, "Expected a web event."
         path = event["http"]["path"]
         method = event["http"]["method"]
 
         status_code = 404
+        headers = {}
         for route in self.routes:
             if path != route.path:
                 continue
 
             if method not in route.methods:
+                headers["Allow"] = ", ".join(route.methods)
                 status_code = 405
                 continue
 
             break
 
         else:
-            raise HttpException(status_code)
+            raise HttpException(status_code, headers=headers)
 
         return route.endpoint(event, context)
 

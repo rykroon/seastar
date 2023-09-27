@@ -16,10 +16,12 @@ class Endpoint:
         ]
 
     def __call__(self, event, context):
-        request = Request.from_event_context(event, context)
-        handler = getattr(self, request.method.lower(), None)
+        assert "http" in event, "Expected a web event."
+        handler = getattr(self, event["http"]["method"].lower(), None)
         if handler is None:
-            raise HttpException(405)
+            headers = {"Allow": ", ".join(self.allowed_methods)}
+            raise HttpException(405, headers=headers)
 
+        request = Request.from_event_context(event, context)
         response = handler(request)
         return response()
