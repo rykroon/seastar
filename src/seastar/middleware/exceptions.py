@@ -25,7 +25,7 @@ class ExceptionMiddleware:
                 raise e
 
             if "http" in event:
-                request = Request.from_event_context(event, context)
+                request = Request.from_event(event)
                 response = handler(request, e)
                 return response()
 

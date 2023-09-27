@@ -1,7 +1,7 @@
 from base64 import b64decode
 from dataclasses import dataclass
 import json
-from typing import Any, Optional, TypeVar
+from typing import Any, TypeVar
 
 from seastar.datastructures import Headers, QueryParams, FormData
 
@@ -16,12 +16,9 @@ class Request:
     headers: Headers[str, str]
     body: str
     parameters: dict[str, Any]
-    context: Optional[dict[str, Any]] = None
 
     @classmethod
-    def from_event_context(
-        cls: type[Self], event: dict[str, Any], context: Optional[dict[str, Any]] = None
-    ) -> Self:
+    def from_event(cls: type[Self], event: dict[str, Any]) -> Self:
         assert "http" in event, "Expected a web event."
         http = event["http"]
 
@@ -42,7 +39,7 @@ class Request:
             parameters={
                 k: v
                 for k, v in event.items()
-                if not k.startswith("__ow") and k not in ["http", "seastar"]
+                if not k.startswith("__ow") and k not in ["http"]
             },
         )
 

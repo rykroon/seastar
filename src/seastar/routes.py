@@ -14,8 +14,8 @@ from .requests import Request
 
 def request_response(func):
     @wraps(func)
-    def wrapper(event, context):
-        request = Request.from_event_context(event, context)
+    def wrapper(event, _):
+        request = Request.from_event(event)
         response = func(request)
         return response()
 
@@ -56,23 +56,18 @@ class Router:
         path = event["http"]["path"]
         method = event["http"]["method"]
 
-        status_code = 404
-        headers = {}
         for route in self.routes:
-            if path != route.path:
+            path_match, method_match = route.matches(path, method)
+            if not path_match:
                 continue
 
-            if method not in route.methods:
-                headers["Allow"] = ", ".join(route.methods)
-                status_code = 405
-                continue
+            if not method_match:
+                headers = {"Allow": ", ".join(route.methods)}
+                raise HttpException(405, headers=headers)
 
-            break
+            return route.endpoint(event, context)
 
-        else:
-            raise HttpException(status_code, headers=headers)
-
-        return route.endpoint(event, context)
+        raise HttpException(404)
 
     def add_route(self, route: Route):
         self.routes.append(route)

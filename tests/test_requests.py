@@ -59,7 +59,7 @@ def get_decoded_body(event):
 class TestRequest:
 
     def test_get(self, get_event):
-        request = Request.from_event_context(get_event)
+        request = Request.from_event(get_event)
         assert request.body == get_event["http"]["body"]
         assert request.headers == get_event["http"]["headers"]
         assert request.method == get_event["http"]["method"]
@@ -67,11 +67,11 @@ class TestRequest:
         assert dict(request.query_params) == {"a": "1", "b": "2"}
     
     def test_body_not_encoded(self, json_event):
-        request = Request.from_event_context(json_event)
+        request = Request.from_event(json_event)
         assert request.body == json_event["http"]["body"]
 
     def test_post_with_json(self, json_event):
-        request = Request.from_event_context(json_event)
+        request = Request.from_event(json_event)
         assert request.body == get_decoded_body(json_event)
         assert request.headers == json_event["http"]["headers"]
         assert request.method == json_event["http"]["method"]
@@ -80,7 +80,7 @@ class TestRequest:
         assert request.json() == {"a": 1, "b": 2}
 
     def test_post_with_form(self, form_event):
-        request = Request.from_event_context(form_event)
+        request = Request.from_event(form_event)
         assert request.body == get_decoded_body(form_event)
         assert request.headers == form_event["http"]["headers"]
         assert request.method == form_event["http"]["method"]
@@ -102,7 +102,7 @@ class TestRequest:
             }
         }
 
-        request = Request.from_event_context(event)
+        request = Request.from_event(event)
         assert request.body == get_decoded_body(event)
         assert request.headers == event["http"]["headers"]
         assert request.method == event["http"]["method"]

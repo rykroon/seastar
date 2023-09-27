@@ -22,6 +22,6 @@ class Endpoint:
             headers = {"Allow": ", ".join(self.allowed_methods)}
             raise HttpException(405, headers=headers)
 
-        request = Request.from_event_context(event, context)
+        request = Request.from_event(event)
         response = handler(request)
         return response()
