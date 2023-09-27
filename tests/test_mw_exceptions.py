@@ -38,7 +38,7 @@ class TestExceptionMiddleware:
             raise HttpException(400)
 
         def handler(request, exc: HttpException):
-            return Response(exc.detail, exc.status_code)
+            return Response(exc.message, exc.status_code)
         
         event = {"http": {"path": "", "method": "GET", "headers": {}}}
         mw = ExceptionMiddleware(app=app, exception_handlers={400: handler})

@@ -3,7 +3,8 @@ from dataclasses import dataclass
 import json
 from typing import Any, Optional, TypeVar
 
-from seastar.datastructures import UrlFormEncodedDict, ImmutableCIMultiDict
+from seastar.datastructures import Headers, QueryParams, FormData
+
 Self = TypeVar("Self", bound="Request")
 
 
@@ -11,8 +12,8 @@ Self = TypeVar("Self", bound="Request")
 class Request:
     method: str
     path: str
-    query_params: UrlFormEncodedDict[str, str]
-    headers: ImmutableCIMultiDict[str, str]
+    query_params: QueryParams[str, str]
+    headers: Headers[str, str]
     body: str
     parameters: dict[str, Any]
     context: Optional[dict[str, Any]] = None
@@ -25,8 +26,8 @@ class Request:
         http = event["http"]
 
         query_string = http.get("queryString", "")
-        query_params = UrlFormEncodedDict.from_string(query_string)
-        headers = ImmutableCIMultiDict(http["headers"])
+        query_params = QueryParams.from_string(query_string)
+        headers = Headers(http["headers"])
 
         body = http.get("body", "")
         if http.get("isBase64Encoded", False):
@@ -41,12 +42,12 @@ class Request:
             parameters={
                 k: v
                 for k, v in event.items()
-                if not k.startswith("__ow") and k != "http"
+                if not k.startswith("__ow") and k not in ["http", "seastar"]
             },
         )
 
     def json(self) -> Any:
         return json.loads(self.body)
 
-    def form(self) -> UrlFormEncodedDict[str, str]:
-        return UrlFormEncodedDict.from_string(self.body)
+    def form(self) -> FormData[str, str]:
+        return FormData.from_string(self.body)
