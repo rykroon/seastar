@@ -1,11 +1,9 @@
 from base64 import b64decode
 from dataclasses import dataclass
 import json
-from urllib.parse import parse_qsl
 from typing import Any, Optional, TypeVar
 
-from multidict import MultiDict, MultiDictProxy, CIMultiDict, CIMultiDictProxy
-
+from seastar.datastructures import UrlFormEncodedDict, ImmutableCIMultiDict
 Self = TypeVar("Self", bound="Request")
 
 
@@ -13,10 +11,9 @@ Self = TypeVar("Self", bound="Request")
 class Request:
     method: str
     path: str
-    query_params: MultiDictProxy[str]
-    headers: CIMultiDictProxy[str]
-    _body: str
-    _is_base64_encoded: bool
+    query_params: UrlFormEncodedDict[str, str]
+    headers: ImmutableCIMultiDict[str, str]
+    body: str
     parameters: dict[str, Any]
     context: Optional[dict[str, Any]] = None
 
@@ -24,35 +21,32 @@ class Request:
     def from_event_context(
         cls: type[Self], event: dict[str, Any], context: Optional[dict[str, Any]] = None
     ) -> Self:
-        assert "http" in event
+        assert "http" in event, "Expected a web event."
         http = event["http"]
 
         query_string = http.get("queryString", "")
-        query_params = MultiDictProxy(MultiDict(parse_qsl(query_string)))
-        headers = CIMultiDictProxy(CIMultiDict(http["headers"]))
+        query_params = UrlFormEncodedDict.from_string(query_string)
+        headers = ImmutableCIMultiDict(http["headers"])
+
+        body = http.get("body", "")
+        if http.get("isBase64Encoded", False):
+            body = b64decode(body).decode()
 
         return cls(
             method=http["method"],
             path=http["path"],
             query_params=query_params,
             headers=headers,
-            _body=http.get("body"),
-            _is_base64_encoded=http.get("isBase64Encoded", False),
+            body=body,
             parameters={
                 k: v
                 for k, v in event.items()
                 if not k.startswith("__ow") and k != "http"
             },
-            context=context,
         )
 
-    def body(self):
-        if not self._is_base64_encoded:
-            return self._body
-        return b64decode(self._body).decode()
-
     def json(self) -> Any:
-        return json.loads(self.body())
+        return json.loads(self.body)
 
-    def form(self) -> MultiDictProxy[Any]:
-        return MultiDictProxy(MultiDict(parse_qsl(self.body())))
+    def form(self) -> UrlFormEncodedDict[str, str]:
+        return UrlFormEncodedDict.from_string(self.body)

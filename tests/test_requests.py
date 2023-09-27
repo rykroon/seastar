@@ -49,30 +49,30 @@ def form_event():
     }
 
 
-def decode_body(event):
-    event["http"]["body"] = b64decode(event["http"]["body"])
-    event["http"]["isBase64Encoded"] = False
-    return event
+def get_decoded_body(event):
+    body = event["http"].get("body", "")
+    if event["http"].get("isBase64Encoded", False):
+        body = b64decode(event["http"]["body"]).decode()
+    return body
 
 
 class TestRequest:
 
     def test_get(self, get_event):
         request = Request.from_event_context(get_event)
-        assert request._body == get_event["http"]["body"]
+        assert request.body == get_event["http"]["body"]
         assert request.headers == get_event["http"]["headers"]
         assert request.method == get_event["http"]["method"]
         assert request.path == get_event["http"]["path"]
         assert dict(request.query_params) == {"a": "1", "b": "2"}
     
     def test_body_not_encoded(self, json_event):
-        event = decode_body(json_event)
-        request = Request.from_event_context(event)
-        assert request.body() == event["http"]["body"]
+        request = Request.from_event_context(json_event)
+        assert request.body == json_event["http"]["body"]
 
     def test_post_with_json(self, json_event):
         request = Request.from_event_context(json_event)
-        assert request._body == json_event["http"]["body"]
+        assert request.body == get_decoded_body(json_event)
         assert request.headers == json_event["http"]["headers"]
         assert request.method == json_event["http"]["method"]
         assert request.path == json_event["http"]["path"]
@@ -81,7 +81,7 @@ class TestRequest:
 
     def test_post_with_form(self, form_event):
         request = Request.from_event_context(form_event)
-        assert request._body == form_event["http"]["body"]
+        assert request.body == get_decoded_body(form_event)
         assert request.headers == form_event["http"]["headers"]
         assert request.method == form_event["http"]["method"]
         assert request.path == form_event["http"]["path"]
@@ -103,7 +103,7 @@ class TestRequest:
         }
 
         request = Request.from_event_context(event)
-        assert request._body == event["http"]["body"]
+        assert request.body == get_decoded_body(event)
         assert request.headers == event["http"]["headers"]
         assert request.method == event["http"]["method"]
         assert request.path == event["http"]["path"]
