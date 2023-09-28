@@ -19,6 +19,7 @@ class SeaStar:
     stack: Optional[App] = field(default=None, init=False)
 
     def __post_init__(self):
+        # maybe remove this for performance.
         self.stack = self.build_stack()
 
     def build_stack(self) -> App:
@@ -29,11 +30,11 @@ class SeaStar:
                 error_handler = value
             else:
                 exception_handlers[key] = value
-        
+
         if error_handler is None:
             error_handler = debug_response if self.debug else error_response
 
-        if not exception_handlers:
+        if HttpException not in exception_handlers:
             exception_handlers[HttpException] = http_exception
 
         app = Router(routes=self.routes) # inner most layer.
@@ -49,3 +50,28 @@ class SeaStar:
             self.stack = self.build_stack()
         return self.stack(event, context)
 
+
+def seastar(path="", methods=None, debug=False):
+    """
+        A simple decorator for a single function app.
+        Could also work with an HttpEndpoint.
+    """
+
+    if methods is None:
+        methods = ["GET"]
+
+    error_handler = debug_response if debug else error_response
+
+    def decorator(func):
+        app = Route(path=path, methods=methods, endpoint=func)
+        app = ExceptionMiddleware(
+            app=app, exception_handlers={
+                Exception: error_handler, HttpException: http_exception
+            }
+        )
+
+        def wrapper(event, context):
+            return app(event, context)
+
+        return wrapper
+    return decorator
