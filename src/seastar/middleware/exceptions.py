@@ -1,18 +1,16 @@
 from dataclasses import dataclass, field
-from http import HTTPStatus
-from typing import Optional, Union
+from typing import Optional
 
 from seastar.exceptions import HttpException
 from seastar.requests import Request
-from seastar.responses import Response
-from seastar.types import App, ExceptionHandler, HttpExceptionHandler
+from seastar.types import App, ExceptionHandler, ExceptionHandlerKey
 
 
 @dataclass
 class ExceptionMiddleware:
     app: App
     exception_handlers: dict[
-        Union[type[Exception], int], Union[ExceptionHandler, HttpExceptionHandler]
+        ExceptionHandlerKey, ExceptionHandler
     ] = field(default_factory=dict)
 
     def __call__(self, event, context):
@@ -24,31 +22,9 @@ class ExceptionMiddleware:
             if handler is None:
                 raise e
 
-            if "http" in event:
-                request = Request.from_event(event)
-                response = handler(request, e)
-                return response()
-
-            return handler(event, context, e)
-
-    @classmethod
-    def create_server_error_middleware(
-        cls,
-        app: App,
-        handler: Optional[HttpExceptionHandler] = None,
-        debug: bool = False,
-    ):
-        """
-        Instead of creating a separate ServerError Middleware.
-        Just use ExceptionMiddleware.
-        """
-        if debug:
-            handler = cls.debug_response
-
-        elif handler is None:
-            handler = cls.error_response
-
-        return cls(app=app, exception_handlers={Exception: handler})
+            request = Request.from_event(event)
+            response = handler(request, e)
+            return response()
 
     def lookup_handler(self, exc: Exception) -> Optional[ExceptionHandler]:
         if isinstance(exc, HttpException):
@@ -62,16 +38,6 @@ class ExceptionMiddleware:
         return None
 
     def add_exception_handler(
-        self, key: Union[type[Exception], int], handler: ExceptionHandler
+        self, key: ExceptionHandlerKey, handler: ExceptionHandler
     ):
         self.exception_handlers[key] = handler
-
-    @staticmethod
-    def debug_response(request: Request, exc: Exception) -> Response:
-        # in the future this should return an html page with the traceback.
-        return Response(body=str(exc), status_code=500)
-
-    @staticmethod
-    def error_response(request: Request, exc: Exception) -> Response:
-        status = HTTPStatus(500)
-        return Response(status.phrase, status.value)
