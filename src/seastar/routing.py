@@ -4,23 +4,17 @@ from http import HTTPMethod
 import inspect
 from typing import Any
 
-from .exceptions import HttpException
-from .requests import Request
-from .types import Event, Context, Endpoint
-
-
-"""
-    Routes are only applicable to web events.
-"""
+from seastar.exceptions import HttpException
+from seastar.requests import Request
+from seastar.types import Event, Context, App
 
 
 def request_response(func):
     @wraps(func)
-    def wrapper(event: Event, context: Context):
+    def wrapper(event: Event, context: Context) -> Any:
         request = Request.from_event(event)
         response = func(request)
         return response()
-
     return wrapper
 
 
@@ -28,11 +22,11 @@ def request_response(func):
 class Route:
     path: str
     methods: list[HTTPMethod]
-    endpoint: Endpoint
+    app: App
 
     def __post_init__(self):
-        if inspect.isfunction(self.endpoint) or inspect.ismethod(self.endpoint):
-            self.endpoint = request_response(self.endpoint)
+        if inspect.isfunction(self.app) or inspect.ismethod(self.app):
+            self.app = request_response(self.app)
 
     def __call__(self, event: Event, context: Context) -> Any:
         assert "http" in event, "Expected a web event."
@@ -43,7 +37,7 @@ class Route:
             headers = {"Allow": ", ".join(self.methods)}
             raise HttpException(405, headers=headers)
 
-        return self.endpoint(event, context)
+        return self.app(event, context)
 
     def matches(self, path: str, method: HTTPMethod):
         return path == self.path, method in self.methods
@@ -67,7 +61,7 @@ class Router:
                 headers = {"Allow": ", ".join(route.methods)}
                 raise HttpException(405, headers=headers)
 
-            return route.endpoint(event, context)
+            return route(event, context)
 
         raise HttpException(404)
 
