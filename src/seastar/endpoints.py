@@ -1,12 +1,14 @@
+from http import HTTPMethod
 from dataclasses import dataclass, field
 
 from .exceptions import HttpException
 from .requests import Request
+from .types import Event, Context
 
 
 @dataclass
 class Endpoint:
-    allowed_methods: list[str] = field(init=False)
+    allowed_methods: list[HTTPMethod] = field(init=False)
 
     def __post_init__(self):
         self.allowed_methods = [
@@ -15,7 +17,7 @@ class Endpoint:
             if getattr(self, method.lower(), None) is not None
         ]
 
-    def __call__(self, event, context):
+    def __call__(self, event: Event, context: Context):
         assert "http" in event, "Expected a web event."
         handler = getattr(self, event["http"]["method"].lower(), None)
         if handler is None:

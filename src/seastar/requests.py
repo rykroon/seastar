@@ -1,16 +1,18 @@
 from base64 import b64decode
 from dataclasses import dataclass
+from http import HTTPMethod
 import json
 from typing import Any, TypeVar
 
 from seastar.datastructures import Headers, QueryParams, FormData
+from seastar.types import Event
 
 Self = TypeVar("Self", bound="Request")
 
 
 @dataclass(frozen=True)
 class Request:
-    method: str
+    method: HTTPMethod
     path: str
     query_params: QueryParams[str, str]
     headers: Headers[str, str]
@@ -18,7 +20,7 @@ class Request:
     parameters: dict[str, Any]
 
     @classmethod
-    def from_event(cls: type[Self], event: dict[str, Any]) -> Self:
+    def from_event(cls: type[Self], event: Event) -> Self:
         assert "http" in event, "Expected a web event."
         http = event["http"]
 

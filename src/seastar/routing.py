@@ -1,10 +1,12 @@
 from dataclasses import dataclass, field
 from functools import wraps
+from http import HTTPMethod
 import inspect
-from typing import Callable
+from typing import Any
 
 from .exceptions import HttpException
 from .requests import Request
+from .types import Event, Context, Endpoint
 
 
 """
@@ -14,7 +16,7 @@ from .requests import Request
 
 def request_response(func):
     @wraps(func)
-    def wrapper(event, _):
+    def wrapper(event: Event, context: Context):
         request = Request.from_event(event)
         response = func(request)
         return response()
@@ -25,14 +27,14 @@ def request_response(func):
 @dataclass(order=True)
 class Route:
     path: str
-    methods: list[str]
-    endpoint: Callable
+    methods: list[HTTPMethod]
+    endpoint: Endpoint
 
     def __post_init__(self):
         if inspect.isfunction(self.endpoint) or inspect.ismethod(self.endpoint):
             self.endpoint = request_response(self.endpoint)
 
-    def __call__(self, event, context):
+    def __call__(self, event: Event, context: Context) -> Any:
         assert "http" in event, "Expected a web event."
         if self.path != event["http"]["path"]:
             raise HttpException(404)
@@ -43,7 +45,7 @@ class Route:
 
         return self.endpoint(event, context)
 
-    def matches(self, path: str, method: str):
+    def matches(self, path: str, method: HTTPMethod):
         return path == self.path, method in self.methods
 
 
@@ -51,7 +53,7 @@ class Route:
 class Router:
     routes: list[Route] = field(default_factory=list)
 
-    def __call__(self, event, context):
+    def __call__(self, event: Event, context: Context) -> Any:
         assert "http" in event, "Expected a web event."
         path = event["http"]["path"]
         method = event["http"]["method"]
