@@ -1,7 +1,7 @@
 import pytest
 
 from seastar.exceptions import HttpException
-from seastar.routes import Route, Router, request_response
+from seastar.routing import Route, Router, request_response
 from seastar.responses import Response
 
 
