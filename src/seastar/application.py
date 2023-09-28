@@ -63,7 +63,7 @@ def seastar(path="", methods=None, debug=False):
     error_handler = debug_response if debug else error_response
 
     def decorator(func):
-        app = Route(path=path, methods=methods, endpoint=func)
+        app = Route(path=path, methods=methods, app=func)
         app = ExceptionMiddleware(
             app=app, exception_handlers={
                 Exception: error_handler, HttpException: http_exception
