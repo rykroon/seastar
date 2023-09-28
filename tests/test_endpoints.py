@@ -1,6 +1,6 @@
 import pytest
 
-from seastar.endpoints import Endpoint
+from seastar.endpoints import HttpEndpoint
 from seastar.exceptions import HttpException
 from seastar.responses import Response
 
@@ -32,7 +32,7 @@ def post_event():
 
 
 def test_endpoint(get_event, post_event):
-    class MyEndpoint(Endpoint):
+    class MyEndpoint(HttpEndpoint):
         def get(self, request):
             return Response("Hello World")
 

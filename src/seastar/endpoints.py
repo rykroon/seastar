@@ -7,7 +7,7 @@ from .types import Event, Context
 
 
 @dataclass
-class Endpoint:
+class HttpEndpoint:
     allowed_methods: list[HTTPMethod] = field(init=False)
 
     def __post_init__(self):
