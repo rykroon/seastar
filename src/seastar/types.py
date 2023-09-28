@@ -1,7 +1,9 @@
-from typing import Any, Callable, Union, Protocol
+from typing import Any, Callable, Protocol, TYPE_CHECKING, Union
 
-from seastar.requests import Request
-from seastar.responses import Response
+if TYPE_CHECKING:
+    # avoids a circular import error.
+    from seastar.requests import Request
+    from seastar.responses import Response
 
 
 Event = dict[str, Any]
@@ -21,7 +23,6 @@ class Context(Protocol):
 
 
 App = Callable[[Event, Context], Any]
-Endpoint = Callable[[Request], Response]
 ExceptionHandlerKey = Union[int, type[Exception]]
 ExceptionHandler = Callable[[Event, Context, Exception], Any]
-HttpExceptionHandler = Callable[[Request, Exception], Response]
+HttpExceptionHandler = Callable[["Request", Exception], "Response"]
