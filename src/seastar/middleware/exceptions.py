@@ -1,19 +1,29 @@
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Any, Optional
 
 from seastar.exceptions import HttpException
 from seastar.requests import Request
-from seastar.types import App, ExceptionHandler, ExceptionHandlerKey
+from seastar.types import (
+    Context, Event, EventHandler, ExceptionHandler, ExceptionHandlerKey
+)
+
+
+"""
+idea...
+    - exception handlers whose key is an integer (status code) or is HttpException
+        then wrap the handler with a decorator that converts (event, context, exc)
+        to (request, exc).
+"""
 
 
 @dataclass
 class ExceptionMiddleware:
-    app: App
+    app: EventHandler
     exception_handlers: dict[
         ExceptionHandlerKey, ExceptionHandler
     ] = field(default_factory=dict)
 
-    def __call__(self, event, context):
+    def __call__(self, event: Event, context: Context) -> Any:
         try:
             return self.app(event, context)
 

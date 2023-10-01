@@ -6,10 +6,10 @@ from typing import Any
 
 from seastar.exceptions import HttpException
 from seastar.requests import Request
-from seastar.types import Event, Context, App
+from seastar.types import Context, Event, EventHandler, HttpEventHandler
 
 
-def request_response(func):
+def request_response(func: HttpEventHandler) -> EventHandler:
     @wraps(func)
     def wrapper(event: Event, context: Context) -> Any:
         request = Request.from_event(event)
@@ -22,7 +22,7 @@ def request_response(func):
 class Route:
     path: str
     methods: list[HTTPMethod]
-    app: App
+    app: EventHandler
 
     def __post_init__(self):
         if inspect.isfunction(self.app) or inspect.ismethod(self.app):
@@ -39,7 +39,7 @@ class Route:
 
         return self.app(event, context)
 
-    def matches(self, path: str, method: HTTPMethod):
+    def matches(self, path: str, method: HTTPMethod) -> tuple[bool, bool]:
         return path == self.path, method in self.methods
 
 

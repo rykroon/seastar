@@ -5,7 +5,7 @@ from seastar.exceptions import HttpException
 from seastar.handlers import debug_response, error_response, http_exception
 from seastar.middleware import ExceptionMiddleware
 from seastar.routing import Route, Router
-from seastar.types import ExceptionHandlerKey, ExceptionHandler, App
+from seastar.types import ExceptionHandlerKey, ExceptionHandler, EventHandler
 
 
 @dataclass
@@ -16,13 +16,13 @@ class SeaStar:
     exception_handlers: dict[
         ExceptionHandlerKey, ExceptionHandler
     ] = field(default_factory=dict)
-    stack: Optional[App] = field(default=None, init=False)
+    stack: Optional[EventHandler] = field(default=None, init=False)
 
     def __post_init__(self):
         # maybe remove this for performance.
         self.stack = self.build_stack()
 
-    def build_stack(self) -> App:
+    def build_stack(self) -> EventHandler:
         error_handler = None
         exception_handlers = {}
         for key, value in self.exception_handlers.items():

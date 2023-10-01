@@ -22,7 +22,10 @@ class Context(Protocol):
         pass
 
 
-App = Callable[[Event, Context], Any]
+EventHandler = Callable[[Event, Context], Any]
+HttpEventHandler = Callable[["Request"], "Response"] # rename to WebEventHandler??
+
 ExceptionHandlerKey = Union[int, type[Exception]]
-ExceptionHandler = Callable[[Event, Context, Exception], Any]
+EventExceptionHandler = Callable[[Event, Context, Exception], Any]
 HttpExceptionHandler = Callable[["Request", Exception], "Response"]
+ExceptionHandler = Union[EventExceptionHandler, HttpExceptionHandler]
