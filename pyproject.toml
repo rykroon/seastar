@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "seastar"
 dynamic = ["version"]
-description = 'Python Digital Ocean Function Tool Kit'
+description = 'A Web Framework and Toolkit for Digital Ocean Cloud Functions influenced by Starlette.'
 readme = "README.md"
 requires-python = ">=3.9"
 license = "MIT"
