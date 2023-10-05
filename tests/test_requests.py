@@ -1,5 +1,5 @@
 from base64 import b64decode
-from seastar import Request
+from seastar.requests import Request
 
 
 class TestRequest:

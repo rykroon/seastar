@@ -1,4 +1,4 @@
-from seastar import Response
+from seastar.responses import Response
 
 
 class TestProcessResponse:
