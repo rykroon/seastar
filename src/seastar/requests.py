@@ -1,6 +1,5 @@
 from base64 import b64decode
 from dataclasses import dataclass
-from http import HTTPMethod
 import json
 from typing import Any, TypeVar
 
@@ -12,7 +11,7 @@ Self = TypeVar("Self", bound="Request")
 
 @dataclass(frozen=True)
 class Request:
-    method: HTTPMethod
+    method: str
     path: str
     query_params: QueryParams[str, str]
     headers: Headers[str, str]

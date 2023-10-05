@@ -1,4 +1,3 @@
-from http import HTTPMethod
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -9,7 +8,7 @@ from .types import Event, Context
 
 @dataclass
 class HttpEndpoint:
-    allowed_methods: list[HTTPMethod] = field(init=False)
+    allowed_methods: list[str] = field(init=False)
 
     def __post_init__(self):
         self.allowed_methods = [

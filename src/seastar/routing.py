@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from http import HTTPMethod
 import inspect
 from typing import Any
 
@@ -11,7 +10,7 @@ from seastar.types import Context, Event, EventHandler
 @dataclass(order=True)
 class Route:
     path: str
-    methods: list[HTTPMethod]
+    methods: list[str]
     app: EventHandler
 
     def __post_init__(self):
@@ -29,7 +28,7 @@ class Route:
 
         return self.app(event, context)
 
-    def matches(self, path: str, method: HTTPMethod) -> tuple[bool, bool]:
+    def matches(self, path: str, method: str) -> tuple[bool, bool]:
         return path == self.path, method in self.methods
 
 
