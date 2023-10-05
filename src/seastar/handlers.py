@@ -15,13 +15,20 @@ def http_exception(request: Request, exc: HttpException) -> Response:
     )
 
 
-def debug_response(event: Event, context: Context, exc: Exception) -> Response:
+def debug_response(event: Event, context: Context, exc: Exception) -> Any:
     # in the future this should return an html page with the traceback.
     body = "".join(traceback.format_exception(exc))
-    return PlainTextResponse(body=body, status_code=500)
+    if "http" not in event:
+        return body
+
+    response = PlainTextResponse(body=body, status_code=500)
+    return response()
 
 
 def error_response(event: Event, context: Context, exc: Exception) -> Any:
     status = HTTPStatus(500)
+    if "http" not in event:
+        return status.phrase
+
     response = PlainTextResponse(status.phrase, status.value)
     return response()
