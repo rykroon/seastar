@@ -3,18 +3,9 @@ from typing import Any, Optional
 
 from seastar.exceptions import HttpException
 from seastar.middleware.web import WebEventMiddleware
-from seastar.requests import Request
 from seastar.types import (
     Context, Event, EventHandler, ExceptionHandler, ExceptionHandlerKey
 )
-
-
-"""
-idea...
-    - exception handlers whose key is an integer (status code) or is HttpException
-        then wrap the handler with a decorator that converts (event, context, exc)
-        to (request, exc).
-"""
 
 
 @dataclass
