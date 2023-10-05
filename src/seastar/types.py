@@ -23,9 +23,9 @@ class Context(Protocol):
 
 
 EventHandler = Callable[[Event, Context], Any]
-HttpEventHandler = Callable[["Request"], "Response"] # rename to WebEventHandler??
+WebEventHandler = Callable[["Request"], "Response"] # rename to WebEventHandler??
 
 ExceptionHandlerKey = Union[int, type[Exception]]
 EventExceptionHandler = Callable[[Event, Context, Exception], Any]
-HttpExceptionHandler = Callable[["Request", Exception], "Response"]
-ExceptionHandler = Union[EventExceptionHandler, HttpExceptionHandler]
+WebEventExceptionHandler = Callable[["Request", Exception], "Response"]
+ExceptionHandler = Union[EventExceptionHandler, WebEventExceptionHandler]

@@ -1,7 +1,7 @@
 import pytest
 
 from seastar.exceptions import HttpException
-from seastar.routing import Route, Router, request_response
+from seastar.routing import Route, Router
 from seastar.responses import Response
 
 
@@ -11,15 +11,6 @@ def endpoint():
         return Response("OK")
 
     return endpoint
-
-
-def test_request_response():
-    @request_response
-    def endpoint(request):
-        return Response("OK")
-
-    event = {"http": {"path": "", "method": "GET", "headers": {}}}
-    assert endpoint(event, None) == {"body": "OK"}
 
 
 class TestRoute:

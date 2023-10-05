@@ -1,21 +1,11 @@
 from dataclasses import dataclass, field
-from functools import wraps
 from http import HTTPMethod
 import inspect
 from typing import Any
 
 from seastar.exceptions import HttpException
-from seastar.requests import Request
-from seastar.types import Context, Event, EventHandler, HttpEventHandler
-
-
-def request_response(func: HttpEventHandler) -> EventHandler:
-    @wraps(func)
-    def wrapper(event: Event, context: Context) -> Any:
-        request = Request.from_event(event)
-        response = func(request)
-        return response()
-    return wrapper
+from seastar.middleware.web import WebEventMiddleware
+from seastar.types import Context, Event, EventHandler
 
 
 @dataclass(order=True)
@@ -26,7 +16,7 @@ class Route:
 
     def __post_init__(self):
         if inspect.isfunction(self.app) or inspect.ismethod(self.app):
-            self.app = request_response(self.app)
+            self.app = WebEventMiddleware(self.app)
 
     def __call__(self, event: Event, context: Context) -> Any:
         assert "http" in event, "Expected a web event."

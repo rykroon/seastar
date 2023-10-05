@@ -1,13 +1,11 @@
 from http import HTTPStatus
 import traceback
+from typing import Any
 
 from seastar.exceptions import HttpException
 from seastar.requests import Request
 from seastar.responses import PlainTextResponse, Response
-
-"""
-Default handlers
-"""
+from seastar.types import Context, Event
 
 
 def http_exception(request: Request, exc: HttpException) -> Response:
@@ -17,12 +15,13 @@ def http_exception(request: Request, exc: HttpException) -> Response:
     )
 
 
-def debug_response(request: Request, exc: Exception) -> Response:
+def debug_response(event: Event, context: Context, exc: Exception) -> Response:
     # in the future this should return an html page with the traceback.
     body = "".join(traceback.format_exception(exc))
     return PlainTextResponse(body=body, status_code=500)
 
 
-def error_response(request: Request, exc: Exception) -> Response:
+def error_response(event: Event, context: Context, exc: Exception) -> Any:
     status = HTTPStatus(500)
-    return PlainTextResponse(status.phrase, status.value)
+    response = PlainTextResponse(status.phrase, status.value)
+    return response()

@@ -26,12 +26,11 @@ class TestExceptionMiddleware:
         def app(event, contet):
             raise Exception
 
-        def handler(request, exc):
-            return Response("There was an error")
+        def handler(event, context, exc):
+            return Response("There was an error")()
 
         mw = ExceptionMiddleware(app=app, exception_handlers={Exception: handler})
-        event = {"http": {"path": "", "method": "GET", "headers": {}}}
-        assert mw(event, None) == {"body": "There was an error"}
+        assert mw({}, None) == {"body": "There was an error"}
 
     def test_http_exception_handler(self):
         def app(event, context):

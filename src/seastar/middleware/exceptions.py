@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from typing import Any, Optional
 
 from seastar.exceptions import HttpException
+from seastar.middleware.web import WebEventMiddleware
 from seastar.requests import Request
 from seastar.types import (
     Context, Event, EventHandler, ExceptionHandler, ExceptionHandlerKey
@@ -23,6 +24,14 @@ class ExceptionMiddleware:
         ExceptionHandlerKey, ExceptionHandler
     ] = field(default_factory=dict)
 
+    def __post_init__(self):
+        exception_handlers = {}
+        for key, value in self.exception_handlers.items():
+            if isinstance(key, int) or issubclass(key, HttpException):
+                value = WebEventMiddleware(value, is_exception_handler=True)
+            exception_handlers[key] = value
+        self.exception_handlers = exception_handlers
+
     def __call__(self, event: Event, context: Context) -> Any:
         try:
             return self.app(event, context)
@@ -32,9 +41,7 @@ class ExceptionMiddleware:
             if handler is None:
                 raise e
 
-            request = Request.from_event(event)
-            response = handler(request, e)
-            return response()
+            return handler(event, context, e)
 
     def lookup_handler(self, exc: Exception) -> Optional[ExceptionHandler]:
         if isinstance(exc, HttpException):
