@@ -4,6 +4,7 @@ import json
 from typing import Any, TypeVar
 
 from seastar.datastructures import Headers, QueryParams, FormData
+from seastar.exceptions import HttpException
 from seastar.types import Event
 
 Self = TypeVar("Self", bound="Request")
@@ -45,7 +46,13 @@ class Request:
         )
 
     def json(self) -> Any:
-        return json.loads(self.body)
+        if self.headers.get("content-type") != "application/json":
+            raise HttpException(415)
+
+        try:
+            return json.loads(self.body)
+        except json.JSONDecodeError:
+            raise HttpException(400)
 
     def form(self) -> FormData[str, str]:
         return FormData.from_string(self.body)
