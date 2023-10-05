@@ -29,7 +29,7 @@ class Response:
             result["statusCode"] = self.status_code
 
         if self.headers:
-            result["headers"] = self.headers
+            result["headers"] = dict(self.headers)
 
         return result or None
 
