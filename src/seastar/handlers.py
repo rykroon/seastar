@@ -1,4 +1,5 @@
 from http import HTTPStatus
+import sys
 import traceback
 from typing import Any
 
@@ -16,8 +17,10 @@ def http_exception(request: Request, exc: HttpException) -> Response:
 
 
 def debug_response(event: Event, context: Context, exc: Exception) -> Any:
-    # in the future this should return an html page with the traceback.
-    body = "".join(traceback.format_exception(exc))
+    # future: this should return an html page with the traceback.
+    exc_type, exc_value, exc_traceback = sys.exc_info()
+    # future: update parameters to format_exception after 3.9 is deprecated.
+    body = "".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
     if "http" not in event:
         return body
 
