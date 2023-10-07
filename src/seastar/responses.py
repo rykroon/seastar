@@ -23,13 +23,13 @@ class Response:
         if self.content_type:
             self.headers["content-type"] = self.content_type
 
-    # def render_body(self) -> JSON:
-    #     return self.body
+    def render_body(self) -> JSON:
+        return self.body
 
     def to_result(self) -> FunctionResult:
         result = {}
         if self.body is not None:
-            result["body"] = self.body
+            result["body"] = self.render_body()
 
         if self.status_code is not None:
             result["statusCode"] = self.status_code
@@ -51,12 +51,12 @@ class PlainTextResponse(Response):
 class JsonResponse(Response):
     content_type = "application/json"
 
-    # def render_body(self):
-    #     return json.dumps(
-    #         self.body,
-    #         ensure_ascii=False,
-    #         allow_nan=False,
-    #         cls=JsonEncoder,
-    #         indent=None,
-    #         separators=(",", ":")
-    #     )
+    def render_body(self):
+        return json.dumps(
+            self.body,
+            ensure_ascii=False,
+            allow_nan=False,
+            cls=JsonEncoder,
+            indent=None,
+            separators=(",", ":")
+        )
