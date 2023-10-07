@@ -2,12 +2,13 @@ from dataclasses import asdict, is_dataclass
 from datetime import datetime, date, time
 from enum import Enum
 from json import JSONEncoder
+from typing import Any
 from uuid import UUID
 
 
 class JsonEncoder(JSONEncoder):
 
-    def default(self, o):
+    def default(self, o: Any) -> Any:
         if is_dataclass(o):
             return asdict(o)
 

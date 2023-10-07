@@ -15,7 +15,7 @@ class ExceptionMiddleware:
         ExceptionHandlerKey, ExceptionHandler
     ] = field(default_factory=dict)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         exception_handlers = {}
         for key, value in self.exception_handlers.items():
             if isinstance(key, int) or issubclass(key, HttpException):
@@ -47,5 +47,5 @@ class ExceptionMiddleware:
 
     def add_exception_handler(
         self, key: ExceptionHandlerKey, handler: ExceptionHandler
-    ):
+    ) -> None:
         self.exception_handlers[key] = handler

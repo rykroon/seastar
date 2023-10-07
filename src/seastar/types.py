@@ -32,7 +32,7 @@ class WebResult(TypedDict):
 FunctionResult: TypeAlias = Union[WebResult, JSON]
 
 EventHandler: TypeAlias = Callable[[Event, Context], FunctionResult]
-WebEventHandler: TypeAlias = Callable[["Request"], "Response"]
+WebEventHandler: TypeAlias = Callable[["Request"], "Response"] # rename to WebFunction ?
 
 ExceptionHandlerKey: TypeAlias = Union[int, type[Exception]]
 EventExceptionHandler: TypeAlias = Callable[[Event, Context, Exception], FunctionResult]

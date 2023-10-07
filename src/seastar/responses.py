@@ -16,7 +16,7 @@ class Response:
     status_code: Optional[int] = None
     headers: Mapping[str, str] = field(default_factory=dict)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not isinstance(self.headers, MutableHeaders):
             self.headers = MutableHeaders(self.headers)
 
@@ -51,7 +51,7 @@ class PlainTextResponse(Response):
 class JsonResponse(Response):
     content_type = "application/json"
 
-    def render_body(self):
+    def render_body(self) -> str:
         return json.dumps(
             self.body,
             ensure_ascii=False,

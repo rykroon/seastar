@@ -12,7 +12,7 @@ class Route:
     methods: list[str]
     app: EventHandler
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if inspect.isfunction(self.app) or inspect.ismethod(self.app):
             self.app = WebEventMiddleware(self.app)
 
@@ -53,5 +53,5 @@ class Router:
 
         raise HttpException(404)
 
-    def add_route(self, route: Route):
+    def add_route(self, route: Route) -> None:
         self.routes.append(route)

@@ -5,12 +5,20 @@ from seastar.exceptions import HttpException
 from seastar.handlers import debug_response, error_response, http_exception
 from seastar.middleware import ExceptionMiddleware
 from seastar.routing import Route, Router
-from seastar.types import ExceptionHandlerKey, ExceptionHandler, EventHandler
+from seastar.types import (
+    Context,
+    Event,
+    ExceptionHandlerKey,
+    ExceptionHandler,
+    EventHandler,
+    FunctionResult,
+    WebEventHandler
+)
 
 
 @dataclass
 class SeaStar:
-    
+
     debug: bool = True
     routes: list[Route] = field(default_factory=list)
     exception_handlers: dict[
@@ -45,13 +53,15 @@ class SeaStar:
         )
         return app
 
-    def __call__(self, event, context):
+    def __call__(self, event: Event, context: Context) -> FunctionResult:
         if self.stack is None:
             self.stack = self.build_stack()
         return self.stack(event, context)
 
 
-def seastar(path="", methods=None, debug=False):
+def seastar(
+    path: str = "", /, *, methods: Optional[list[str]] = None, debug: bool = False
+):
     """
         A simple decorator for a single function app.
         Could also work with an HttpEndpoint.
@@ -62,7 +72,7 @@ def seastar(path="", methods=None, debug=False):
 
     error_handler = debug_response if debug else error_response
 
-    def decorator(func):
+    def decorator(func: WebEventHandler) -> EventHandler:
         app = Route(path=path, methods=methods, app=func)
         app = ExceptionMiddleware(
             app=app, exception_handlers={
@@ -70,7 +80,7 @@ def seastar(path="", methods=None, debug=False):
             }
         )
 
-        def wrapper(event, context):
+        def wrapper(event: Event, context: Context) -> FunctionResult:
             return app(event, context)
 
         return wrapper

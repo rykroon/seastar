@@ -1,13 +1,12 @@
 from base64 import b64decode
 from dataclasses import dataclass
 import json
-from typing import Any, TypeVar
+from typing import Any
+from typing_extensions import Self
 
 from seastar.datastructures import Headers, QueryParams, FormData
 from seastar.exceptions import HttpException
 from seastar.types import Event
-
-Self = TypeVar("Self", bound="Request")
 
 
 @dataclass(frozen=True)
