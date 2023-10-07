@@ -27,7 +27,7 @@ class TestExceptionMiddleware:
             raise Exception
 
         def handler(event, context, exc):
-            return Response("There was an error")()
+            return Response("There was an error").to_result()
 
         mw = ExceptionMiddleware(app=app, exception_handlers={Exception: handler})
         assert mw({}, None) == {"body": "There was an error"}
