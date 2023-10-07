@@ -1,8 +1,8 @@
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Optional
 
 from seastar.requests import Request
-from seastar.types import Context, Event, WebEventHandler
+from seastar.types import Context, Event, FunctionResult, WebEventHandler
 
 
 @dataclass
@@ -13,11 +13,11 @@ class WebEventMiddleware:
 
     def __call__(
         self, event: Event, context: Context, exc: Optional[Exception] = None
-    ) -> Any:
+    ) -> FunctionResult:
         request = Request.from_event(event)
         if self.is_exception_handler:
             assert exc is not None
             response = self.app(request, exc)
         else:
             response = self.app(request)
-        return response()
+        return response.to_result()

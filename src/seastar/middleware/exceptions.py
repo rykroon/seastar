@@ -1,10 +1,10 @@
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Optional
 
 from seastar.exceptions import HttpException
 from seastar.middleware.web import WebEventMiddleware
 from seastar.types import (
-    Context, Event, EventHandler, ExceptionHandler, ExceptionHandlerKey
+    Context, Event, EventHandler, ExceptionHandler, ExceptionHandlerKey, FunctionResult
 )
 
 
@@ -23,7 +23,7 @@ class ExceptionMiddleware:
             exception_handlers[key] = value
         self.exception_handlers = exception_handlers
 
-    def __call__(self, event: Event, context: Context) -> Any:
+    def __call__(self, event: Event, context: Context) -> FunctionResult:
         try:
             return self.app(event, context)
 

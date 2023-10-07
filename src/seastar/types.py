@@ -1,4 +1,5 @@
-from typing import Any, Callable, Protocol, TYPE_CHECKING, Union
+from typing import Any, Callable, Protocol, TypedDict, TYPE_CHECKING, Union
+from typing_extensions import NotRequired, TypeAlias
 
 if TYPE_CHECKING:
     # avoids a circular import error.
@@ -6,7 +7,7 @@ if TYPE_CHECKING:
     from seastar.responses import Response
 
 
-Event = dict[str, Any]
+Event: TypeAlias = dict[str, Any]
 
 class Context(Protocol):
     activation_id: str
@@ -21,11 +22,19 @@ class Context(Protocol):
     def get_remaining_time_in_millis(self) -> int:
         pass
 
+JSON: TypeAlias = dict[str, "JSON"] | list["JSON"] | str | int | float | bool | None
 
-EventHandler = Callable[[Event, Context], Any]
-WebEventHandler = Callable[["Request"], "Response"] # rename to WebEventHandler??
+class WebResult(TypedDict):
+    body: NotRequired[JSON]
+    statusCode: NotRequired[int]
+    headers: NotRequired[dict[str, str]]
 
-ExceptionHandlerKey = Union[int, type[Exception]]
-EventExceptionHandler = Callable[[Event, Context, Exception], Any]
-WebEventExceptionHandler = Callable[["Request", Exception], "Response"]
-ExceptionHandler = Union[EventExceptionHandler, WebEventExceptionHandler]
+FunctionResult: TypeAlias = Union[WebResult, JSON]
+
+EventHandler: TypeAlias = Callable[[Event, Context], FunctionResult]
+WebEventHandler: TypeAlias = Callable[["Request"], "Response"]
+
+ExceptionHandlerKey: TypeAlias = Union[int, type[Exception]]
+EventExceptionHandler: TypeAlias = Callable[[Event, Context, Exception], FunctionResult]
+WebEventExceptionHandler: TypeAlias = Callable[["Request", Exception], "Response"]
+ExceptionHandler: TypeAlias = Union[EventExceptionHandler, WebEventExceptionHandler]

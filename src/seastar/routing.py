@@ -1,10 +1,9 @@
 from dataclasses import dataclass, field
 import inspect
-from typing import Any
 
 from seastar.exceptions import HttpException
 from seastar.middleware.web import WebEventMiddleware
-from seastar.types import Context, Event, EventHandler
+from seastar.types import Context, Event, EventHandler, FunctionResult
 
 
 @dataclass(order=True)
@@ -17,7 +16,7 @@ class Route:
         if inspect.isfunction(self.app) or inspect.ismethod(self.app):
             self.app = WebEventMiddleware(self.app)
 
-    def __call__(self, event: Event, context: Context) -> Any:
+    def __call__(self, event: Event, context: Context) -> FunctionResult:
         assert "http" in event, "Expected a web event."
         if self.path != event["http"]["path"]:
             raise HttpException(404)
@@ -36,7 +35,7 @@ class Route:
 class Router:
     routes: list[Route] = field(default_factory=list)
 
-    def __call__(self, event: Event, context: Context) -> Any:
+    def __call__(self, event: Event, context: Context) -> FunctionResult:
         assert "http" in event, "Expected a web event."
         path = event["http"]["path"]
         method = event["http"]["method"]

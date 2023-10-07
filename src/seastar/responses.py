@@ -1,15 +1,18 @@
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any, ClassVar, Optional
+import json
+from typing import ClassVar, Optional
 
 from seastar.datastructures import MutableHeaders
+from seastar.json import JsonEncoder
+from seastar.types import FunctionResult, JSON
 
 
 @dataclass
 class Response:
     content_type: ClassVar[Optional[str]] = None
 
-    body: Any = None
+    body: JSON = None
     status_code: Optional[int] = None
     headers: Mapping[str, str] = field(default_factory=dict)
 
@@ -20,7 +23,10 @@ class Response:
         if self.content_type:
             self.headers["content-type"] = self.content_type
 
-    def __call__(self):
+    # def render_body(self) -> JSON:
+    #     return self.body
+
+    def to_result(self) -> FunctionResult:
         result = {}
         if self.body is not None:
             result["body"] = self.body
@@ -31,7 +37,7 @@ class Response:
         if self.headers:
             result["headers"] = dict(self.headers)
 
-        return result or None
+        return result
 
 
 class HtmlResponse(Response):
@@ -44,3 +50,13 @@ class PlainTextResponse(Response):
 
 class JsonResponse(Response):
     content_type = "application/json"
+
+    # def render_body(self):
+    #     return json.dumps(
+    #         self.body,
+    #         ensure_ascii=False,
+    #         allow_nan=False,
+    #         cls=JsonEncoder,
+    #         indent=None,
+    #         separators=(",", ":")
+    #     )

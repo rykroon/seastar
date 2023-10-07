@@ -1,9 +1,8 @@
 from dataclasses import dataclass, field
-from typing import Any
 
-from .exceptions import HttpException
-from .requests import Request
-from .types import Event, Context
+from seastar.exceptions import HttpException
+from seastar.requests import Request
+from seastar.types import Event, Context, FunctionResult
 
 
 @dataclass
@@ -17,7 +16,7 @@ class HttpEndpoint:
             if getattr(self, method.lower(), None) is not None
         ]
 
-    def __call__(self, event: Event, context: Context) -> Any:
+    def __call__(self, event: Event, context: Context) -> FunctionResult:
         assert "http" in event, "Expected a web event."
         handler = getattr(self, event["http"]["method"].lower(), None)
         if handler is None:
@@ -26,4 +25,4 @@ class HttpEndpoint:
 
         request = Request.from_event(event)
         response = handler(request)
-        return response()
+        return response.to_result()
