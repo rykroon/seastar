@@ -61,20 +61,17 @@ class Router:
 
         raise HttpException(404)
 
-    def add_route(self, route: Route) -> None:
-        self.routes.append(route)
+    def add_route(self, path: str, methods: list[str], func: Function) -> None:
+        self.routes.append(Route(path, methods, func))
 
-    # def add_route(self, path: str, methods: list[str], app: EventHandler) -> None:
-    #     self.routes.append(Route(path, methods, app))
-    
-    # def route(self, path: str, /, *, methods: list[str]):
-    #     def decorator(func):
-    #         self.add_route(path, methods, func)
-    #     return decorator
+    def route(self, path: str, /, *, methods: list[str]):
+        def decorator(func):
+            self.add_route(path, methods, func)
+        return decorator
 
-    # def get(self, path: str):
-    #     return self.route(path, methods=["GET"])
+    def get(self, path: str):
+        return self.route(path, methods=["GET"])
     
-    # def post(self, path: str):
-    #     return self.route(path, methods=["POST"])
+    def post(self, path: str):
+        return self.route(path, methods=["POST"])
 
