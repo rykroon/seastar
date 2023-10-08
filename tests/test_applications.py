@@ -47,7 +47,7 @@ class TestSeaStarClass:
 class TestSeaStarDecorator:
 
     def test_seastart(self):
-        @seastar(path="")
+        @seastar("")
         def my_route(request):
             return Response("hello world")
         
