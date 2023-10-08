@@ -2,8 +2,16 @@ from dataclasses import dataclass, field
 import inspect
 
 from seastar.exceptions import HttpException
-from seastar.middleware.web import WebEventMiddleware
-from seastar.types import Context, Event, EventHandler, FunctionResult
+from seastar.requests import Request
+from seastar.types import Context, Event, EventHandler, FunctionResult, WebEventHandler
+
+
+def request_response(func: WebEventHandler) -> EventHandler:
+    def wrapper(event: Event, context: Context) -> FunctionResult:
+        request = Request.from_event(event)
+        response = func(request)
+        return response.to_result()
+    return wrapper
 
 
 @dataclass(order=True)
@@ -14,7 +22,7 @@ class Route:
 
     def __post_init__(self) -> None:
         if inspect.isfunction(self.app) or inspect.ismethod(self.app):
-            self.app = WebEventMiddleware(self.app)
+            self.app = request_response(self.app)
 
     def __call__(self, event: Event, context: Context) -> FunctionResult:
         assert "http" in event, "Expected a web event."
@@ -55,3 +63,18 @@ class Router:
 
     def add_route(self, route: Route) -> None:
         self.routes.append(route)
+
+    # def add_route(self, path: str, methods: list[str], app: EventHandler) -> None:
+    #     self.routes.append(Route(path, methods, app))
+    
+    # def route(self, path: str, /, *, methods: list[str]):
+    #     def decorator(func):
+    #         self.add_route(path, methods, func)
+    #     return decorator
+
+    # def get(self, path: str):
+    #     return self.route(path, methods=["GET"])
+    
+    # def post(self, path: str):
+    #     return self.route(path, methods=["POST"])
+

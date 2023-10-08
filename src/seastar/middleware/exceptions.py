@@ -2,10 +2,24 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from seastar.exceptions import HttpException
-from seastar.middleware.web import WebEventMiddleware
+from seastar.requests import Request
 from seastar.types import (
-    Context, Event, EventHandler, ExceptionHandler, ExceptionHandlerKey, FunctionResult
+    Context,
+    Event,
+    EventHandler,
+    ExceptionHandler,
+    ExceptionHandlerKey,
+    FunctionResult,
+    WebEventExceptionHandler
 )
+
+
+def request_response(handler: WebEventExceptionHandler) -> EventHandler:
+    def wrapper(event: Event, context: Context, exc: Exception) -> FunctionResult:
+        request = Request.from_event(event)
+        response = handler(request, exc)
+        return response.to_result()
+    return wrapper
 
 
 @dataclass
@@ -19,7 +33,7 @@ class ExceptionMiddleware:
         exception_handlers = {}
         for key, value in self.exception_handlers.items():
             if isinstance(key, int) or issubclass(key, HttpException):
-                value = WebEventMiddleware(value, is_exception_handler=True)
+                value = request_response(value)
             exception_handlers[key] = value
         self.exception_handlers = exception_handlers
 
