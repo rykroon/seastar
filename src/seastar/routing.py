@@ -3,10 +3,10 @@ import inspect
 
 from seastar.exceptions import HttpException
 from seastar.requests import Request
-from seastar.types import Context, Event, EventHandler, FunctionResult, WebEventHandler
+from seastar.types import Context, Event, Function, FunctionResult, WebFunction
 
 
-def request_response(func: WebEventHandler) -> EventHandler:
+def request_response(func: WebFunction) -> Function:
     def wrapper(event: Event, context: Context) -> FunctionResult:
         request = Request.from_event(event)
         response = func(request)
@@ -18,11 +18,11 @@ def request_response(func: WebEventHandler) -> EventHandler:
 class Route:
     path: str
     methods: list[str]
-    app: EventHandler
+    func: Function
 
     def __post_init__(self) -> None:
-        if inspect.isfunction(self.app) or inspect.ismethod(self.app):
-            self.app = request_response(self.app)
+        if inspect.isfunction(self.func) or inspect.ismethod(self.func):
+            self.func = request_response(self.func)
 
     def __call__(self, event: Event, context: Context) -> FunctionResult:
         assert "http" in event, "Expected a web event."
@@ -33,7 +33,7 @@ class Route:
             headers = {"Allow": ", ".join(self.methods)}
             raise HttpException(405, headers=headers)
 
-        return self.app(event, context)
+        return self.func(event, context)
 
     def matches(self, path: str, method: str) -> tuple[bool, bool]:
         return path == self.path, method in self.methods

@@ -3,7 +3,7 @@ from typing import Optional
 
 from seastar.exceptions import HttpException
 from seastar.requests import Request
-from seastar.types import Event, Context, FunctionResult, WebEventHandler
+from seastar.types import Event, Context, FunctionResult, WebFunction
 
 
 @dataclass
@@ -19,7 +19,7 @@ class HttpEndpoint:
 
     def __call__(self, event: Event, context: Context) -> FunctionResult:
         assert "http" in event, "Expected a web event."
-        handler: Optional[WebEventHandler] = getattr(self, event["http"]["method"].lower(), None)
+        handler: Optional[WebFunction] = getattr(self, event["http"]["method"].lower(), None)
         if handler is None:
             headers = {"Allow": ", ".join(self.allowed_methods)}
             raise HttpException(405, headers=headers)

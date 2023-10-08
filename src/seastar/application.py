@@ -10,9 +10,9 @@ from seastar.types import (
     Event,
     ExceptionHandlerKey,
     ExceptionHandler,
-    EventHandler,
+    Function,
     FunctionResult,
-    WebEventHandler
+    WebFunction
 )
 
 
@@ -24,13 +24,13 @@ class SeaStar:
     exception_handlers: dict[
         ExceptionHandlerKey, ExceptionHandler
     ] = field(default_factory=dict)
-    stack: Optional[EventHandler] = field(default=None, init=False)
+    stack: Optional[Function] = field(default=None, init=False)
 
     def __post_init__(self):
         # maybe remove this for performance.
         self.stack = self.build_stack()
 
-    def build_stack(self) -> EventHandler:
+    def build_stack(self) -> Function:
         error_handler = None
         exception_handlers = {}
         for key, value in self.exception_handlers.items():
@@ -72,7 +72,7 @@ def seastar(
 
     error_handler = debug_response if debug else error_response
 
-    def decorator(func: WebEventHandler) -> EventHandler:
+    def decorator(func: WebFunction) -> Function:
         app = Route(path=path, methods=methods, app=func)
         app = ExceptionMiddleware(
             app=app, exception_handlers={
