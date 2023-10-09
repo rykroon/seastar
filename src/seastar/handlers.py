@@ -5,7 +5,7 @@ import traceback
 from seastar.exceptions import HttpException
 from seastar.requests import Request
 from seastar.responses import PlainTextResponse, Response
-from seastar.types import Context, Event, FunctionResult
+from seastar.types import Context, Event, HandlerResult
 
 
 def http_exception(request: Request, exc: HttpException) -> Response:
@@ -15,7 +15,7 @@ def http_exception(request: Request, exc: HttpException) -> Response:
     )
 
 
-def debug_response(event: Event, context: Context, exc: Exception) -> FunctionResult:
+def debug_response(event: Event, context: Context, exc: Exception) -> HandlerResult:
     # future: this should return an html page with the traceback.
     exc_type, exc_value, exc_traceback = sys.exc_info()
     # future: update parameters to format_exception after 3.9 is deprecated.
@@ -27,7 +27,7 @@ def debug_response(event: Event, context: Context, exc: Exception) -> FunctionRe
     return response.to_result()
 
 
-def error_response(event: Event, context: Context, exc: Exception) -> FunctionResult:
+def error_response(event: Event, context: Context, exc: Exception) -> HandlerResult:
     status = HTTPStatus(500)
     if "http" not in event:
         return {"body": status.phrase}

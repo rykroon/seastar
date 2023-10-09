@@ -9,14 +9,14 @@ from seastar.types import (
     EventExceptionHandler,
     ExceptionHandler,
     ExceptionHandlerKey,
-    Function,
-    FunctionResult,
-    WebEventExceptionHandler
+    EventHandler,
+    HandlerResult,
+    RequestExceptionHandler
 )
 
 
-def request_response(handler: WebEventExceptionHandler) -> EventExceptionHandler:
-    def wrapper(event: Event, context: Context, exc: Exception) -> FunctionResult:
+def request_response(handler: RequestExceptionHandler) -> EventExceptionHandler:
+    def wrapper(event: Event, context: Context, exc: Exception) -> HandlerResult:
         request = Request.from_event(event)
         response = handler(request, exc)
         return response.to_result()
@@ -25,7 +25,7 @@ def request_response(handler: WebEventExceptionHandler) -> EventExceptionHandler
 
 @dataclass
 class ExceptionMiddleware:
-    app: Function
+    app: EventHandler
     exception_handlers: dict[
         ExceptionHandlerKey, ExceptionHandler
     ] = field(default_factory=dict)
@@ -38,7 +38,7 @@ class ExceptionMiddleware:
             exception_handlers[key] = value
         self.exception_handlers = exception_handlers
 
-    def __call__(self, event: Event, context: Context) -> FunctionResult:
+    def __call__(self, event: Event, context: Context) -> HandlerResult:
         try:
             return self.app(event, context)
 

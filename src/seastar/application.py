@@ -10,9 +10,9 @@ from seastar.types import (
     Event,
     ExceptionHandlerKey,
     ExceptionHandler,
-    Function,
-    FunctionResult,
-    WebFunction
+    EventHandler,
+    HandlerResult,
+    RequestHandler
 )
 
 
@@ -24,13 +24,13 @@ class SeaStar:
     exception_handlers: dict[
         ExceptionHandlerKey, ExceptionHandler
     ] = field(default_factory=dict)
-    stack: Optional[Function] = field(default=None, init=False)
+    stack: Optional[EventHandler] = field(default=None, init=False)
 
     def __post_init__(self):
         # maybe remove this for performance.
         self.stack = self.build_stack()
 
-    def build_stack(self) -> Function:
+    def build_stack(self) -> EventHandler:
         error_handler = None
         exception_handlers = {}
         for key, value in self.exception_handlers.items():
@@ -53,7 +53,7 @@ class SeaStar:
         )
         return app
 
-    def __call__(self, event: Event, context: Context) -> FunctionResult:
+    def __call__(self, event: Event, context: Context) -> HandlerResult:
         if self.stack is None:
             self.stack = self.build_stack()
         return self.stack(event, context)
@@ -72,7 +72,7 @@ def seastar(
 
     error_handler = debug_response if debug else error_response
 
-    def decorator(func: WebFunction) -> Function:
+    def decorator(func: RequestHandler) -> EventHandler:
         app = Route(path=path, methods=methods, app=func)
         app = ExceptionMiddleware(
             app=app, exception_handlers={
@@ -80,7 +80,7 @@ def seastar(
             }
         )
 
-        def wrapper(event: Event, context: Context) -> FunctionResult:
+        def wrapper(event: Event, context: Context) -> HandlerResult:
             return app(event, context)
 
         return wrapper

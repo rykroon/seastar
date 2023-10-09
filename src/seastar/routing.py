@@ -3,11 +3,13 @@ import inspect
 
 from seastar.exceptions import HttpException
 from seastar.requests import Request
-from seastar.types import Context, Event, Function, FunctionResult, WebFunction
+from seastar.types import (
+    Context, Event, EventHandler, HandlerResult, RequestHandler, Handler
+)
 
 
-def request_response(func: WebFunction) -> Function:
-    def wrapper(event: Event, context: Context) -> FunctionResult:
+def request_response(func: RequestHandler) -> EventHandler:
+    def wrapper(event: Event, context: Context) -> HandlerResult:
         request = Request.from_event(event)
         response = func(request)
         return response.to_result()
@@ -18,13 +20,13 @@ def request_response(func: WebFunction) -> Function:
 class Route:
     path: str
     methods: list[str]
-    func: Function
+    func: Handler
 
     def __post_init__(self) -> None:
         if inspect.isfunction(self.func) or inspect.ismethod(self.func):
             self.func = request_response(self.func)
 
-    def __call__(self, event: Event, context: Context) -> FunctionResult:
+    def __call__(self, event: Event, context: Context) -> HandlerResult:
         assert "http" in event, "Expected a web event."
         if self.path != event["http"]["path"]:
             raise HttpException(404)
@@ -43,7 +45,7 @@ class Route:
 class Router:
     routes: list[Route] = field(default_factory=list)
 
-    def __call__(self, event: Event, context: Context) -> FunctionResult:
+    def __call__(self, event: Event, context: Context) -> HandlerResult:
         assert "http" in event, "Expected a web event."
         path = event["http"]["path"]
         method = event["http"]["method"]
@@ -61,7 +63,7 @@ class Router:
 
         raise HttpException(404)
 
-    def add_route(self, path: str, methods: list[str], func: Function) -> None:
+    def add_route(self, path: str, methods: list[str], func: RequestHandler) -> None:
         self.routes.append(Route(path, methods, func))
 
     def route(self, path: str, /, *, methods: list[str]):

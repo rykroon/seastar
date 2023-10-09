@@ -5,7 +5,7 @@ from typing import ClassVar, Optional
 
 from seastar.datastructures import MutableHeaders
 from seastar.json import JsonEncoder
-from seastar.types import FunctionResult, JSON
+from seastar.types import HandlerResult, JSON
 
 
 @dataclass
@@ -26,7 +26,7 @@ class Response:
     def render_body(self) -> JSON:
         return self.body
 
-    def to_result(self) -> FunctionResult:
+    def to_result(self) -> HandlerResult:
         result = {}
         if self.body is not None:
             result["body"] = self.render_body()
