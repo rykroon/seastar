@@ -1,10 +1,7 @@
-from dataclasses import dataclass, field
-import inspect
-
 from seastar.exceptions import HttpException
 from seastar.requests import Request
 from seastar.types import (
-    Context, Event, EventHandler, HandlerResult, RequestHandler, Handler
+    Context, Event, EventHandler, HandlerResult, RequestHandler
 )
 
 
@@ -16,15 +13,12 @@ def request_response(func: RequestHandler) -> EventHandler:
     return wrapper
 
 
-@dataclass(order=True)
 class Route:
-    path: str
-    methods: list[str]
-    func: Handler
 
-    def __post_init__(self) -> None:
-        if inspect.isfunction(self.func) or inspect.ismethod(self.func):
-            self.func = request_response(self.func)
+    def __init__(self, path: str, methods: list[str], handler: RequestHandler):
+        self.path: str = path
+        self.methods: list[str] = methods
+        self.handler: EventHandler = request_response(handler)
 
     def __call__(self, event: Event, context: Context) -> HandlerResult:
         assert "http" in event, "Expected a web event."
@@ -35,15 +29,16 @@ class Route:
             headers = {"Allow": ", ".join(self.methods)}
             raise HttpException(405, headers=headers)
 
-        return self.func(event, context)
+        return self.handler(event, context)
 
     def matches(self, path: str, method: str) -> tuple[bool, bool]:
         return path == self.path, method in self.methods
 
 
-@dataclass
 class Router:
-    routes: list[Route] = field(default_factory=list)
+
+    def __init__(self, routes: list[Route]):
+        self.routes: list[Route] = routes
 
     def __call__(self, event: Event, context: Context) -> HandlerResult:
         assert "http" in event, "Expected a web event."
@@ -63,8 +58,8 @@ class Router:
 
         raise HttpException(404)
 
-    def add_route(self, path: str, methods: list[str], func: RequestHandler) -> None:
-        self.routes.append(Route(path, methods, func))
+    def add_route(self, path: str, methods: list[str], handler: RequestHandler) -> None:
+        self.routes.append(Route(path, methods, handler))
 
     def route(self, path: str, /, *, methods: list[str]):
         def decorator(func):

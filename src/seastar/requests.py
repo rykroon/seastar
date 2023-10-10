@@ -1,15 +1,16 @@
 from base64 import b64decode
-from dataclasses import dataclass
 import json
-from typing import Any
+from typing import Any, Mapping
 from typing_extensions import Self
+from urllib.parse import parse_qsl
+
+from multidict import MultiDict, MultiDictProxy, CIMultiDict, CIMultiDictProxy
 
 from seastar.datastructures import Headers, QueryParams, FormData
 from seastar.exceptions import HttpException
 from seastar.types import Event
 
 
-@dataclass(frozen=True)
 class Request:
     method: str
     path: str
@@ -18,14 +19,37 @@ class Request:
     body: str
     parameters: dict[str, Any]
 
+    def __init__(
+        self,
+        method: str,
+        path: str,
+        query_params: Mapping[str, str],
+        headers: Mapping[str, str],
+        body: str,
+        parameters: Mapping[str, str]
+    ) -> None:
+        self.method = method
+        self.path = path
+
+        if not isinstance(query_params, MultiDict):
+            query_params = MultiDict(query_params)
+
+        self.query_params = MultiDictProxy(query_params)
+
+        if not isinstance(headers, CIMultiDict):
+            headers = CIMultiDict(headers)
+
+        self.headers = CIMultiDictProxy(headers)
+        self.body = body
+        self.parameters = parameters
+
     @classmethod
     def from_event(cls: type[Self], event: Event) -> Self:
         assert "http" in event, "Expected a web event."
         http = event["http"]
 
         query_string = http.get("queryString", "")
-        query_params = QueryParams.from_string(query_string)
-        headers = Headers(http["headers"])
+        query_params = parse_qsl(query_string)
 
         body = http.get("body", "")
         if http.get("isBase64Encoded", False):
@@ -35,7 +59,7 @@ class Request:
             method=http["method"],
             path=http["path"],
             query_params=query_params,
-            headers=headers,
+            headers=http["headers"],
             body=body,
             parameters={
                 k: v

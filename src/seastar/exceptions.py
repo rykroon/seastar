@@ -1,17 +1,19 @@
 from collections.abc import Mapping
-from dataclasses import dataclass, field
 from http import HTTPStatus
-from typing import Any, Optional
+from typing import Optional
+
+from seastar.datastructures import MutableHeaders
 
 
-@dataclass
 class HttpException(Exception):
-    status_code: int
-    message: Optional[Any] = None
-    headers: Mapping[str, str] = field(default_factory=dict)
 
-    def __post_init__(self) -> None:
-        if not self.message:
-            self.message = HTTPStatus(self.status_code).phrase
-
+    def __init__(
+        self,
+        status_code: int,
+        message: Optional[str],
+        headers: Optional[Mapping[str, str]]
+    ) -> None:
+        self.status_code = status_code
+        self.message = message or HTTPStatus(self.status_code).phrase
+        self.headers = MutableHeaders(headers)
         super().__init__(self.status_code, self.message)

@@ -13,7 +13,13 @@ __version__ = "0.3.0"
     And then perhaps I can refer to the top-level handler as the "entry point".
 
 
+    I am currently drunk and considering an idea that would basically make most of my
+    work useless...
+    WHAT IF! 
+    instead of rewriting a starlette like framework.
 
+    what If I just created an interface that converted Digital Ocean's event and context
+    into a an ASGI scope, receive, send. 
 
 
 """

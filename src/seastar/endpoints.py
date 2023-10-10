@@ -1,4 +1,3 @@
-from dataclasses import dataclass, field
 from typing import Optional
 
 from seastar.exceptions import HttpException
@@ -6,12 +5,10 @@ from seastar.requests import Request
 from seastar.types import Event, Context, HandlerResult, RequestHandler
 
 
-@dataclass
 class HttpEndpoint:
-    allowed_methods: list[str] = field(init=False)
 
-    def __post_init__(self) -> None:
-        self.allowed_methods = [
+    def __init__(self) -> None:
+        self.allowed_methods: list[str] = [
             method
             for method in ("GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
             if getattr(self, method.lower(), None) is not None
