@@ -1,4 +1,5 @@
 from base64 import b64decode
+from dataclasses import dataclass
 import json
 from typing import Any, Mapping
 from typing_extensions import Self
@@ -8,35 +9,19 @@ from seastar.exceptions import HttpException
 from seastar.types import Event
 
 
+@dataclass
 class Request:
-
-    def __init__(
-        self,
-        method: str,
-        path: str,
-        query_params: Mapping[str, str],
-        headers: Mapping[str, str],
-        body: str,
-        parameters: Mapping[str, str]
-    ) -> None:
-        if not isinstance(query_params, QueryParams):
-            query_params = QueryParams(query_params)
-
-        if not isinstance(headers, Headers):
-            headers = Headers(headers)
-
-        self.method = method
-        self.path = path
-        self.query_params = QueryParams(query_params)
-        self.headers = headers
-        self.body = body
-        self.parameters = parameters
+    method: str
+    path: str
+    query_params: QueryParams[str, str]
+    headers: Headers[str, str]
+    body: str
+    parameters: Mapping[str, str]
 
     @classmethod
     def from_event(cls: type[Self], event: Event) -> Self:
         assert "http" in event, "Expected a web event."
         http = event["http"]
-
         query_string = http.get("queryString", "")
         query_params = QueryParams.from_string(query_string)
 
@@ -53,7 +38,7 @@ class Request:
             parameters={
                 k: v
                 for k, v in event.items()
-                if not k.startswith("__ow") and k not in ["http"]
+                if not k.startswith("__") and k not in ["http"]
             },
         )
 
