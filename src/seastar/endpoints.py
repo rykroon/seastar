@@ -29,7 +29,7 @@ class HttpEndpoint:
             if is_entry_point:
                 return PlainTextResponse(
                     "Method Not Allowed", status_code=405, headers=headers
-                )
+                ).to_result()
             else:
                 raise HttpException(405, headers=headers)
 

@@ -11,3 +11,6 @@ class TestHttpException:
         exc = HttpException(400, "Shit!")
         assert exc.detail == "Shit!"
         assert exc.args == (400, "Shit!")
+    
+    def test_str(self):
+        assert str(HttpException(400)) == "400: Bad Request"
