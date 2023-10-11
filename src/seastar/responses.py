@@ -18,31 +18,11 @@ class Response:
 
     body: Any = field(init=False)
 
-    def __post_init__(self, content, media_type):
+    def __post_init__(self, content: Any, media_type: Optional[str]):
         self.body = self.render(content)
-        content_type = media_type or self.default_media_type or None
+        content_type = media_type or self.default_media_type
         if content_type is not None:
             self.headers.setdefault("content-type", content_type)
-
-    # def __init__(
-    #     self,
-    #     content: Any = None,
-    #     status_code: Optional[int] = None,
-    #     headers: Optional[Mapping[str, str]] = None,
-    #     media_type: Optional[str] = None
-    # ):
-    #     if headers is None:
-    #         headers = {}
-
-    #     if media_type is not None:
-    #         self.media_type = media_type
-
-    #     self.body = self.render(content)
-    #     self.status_code = status_code
-    #     self.headers = headers
-
-    #     if self.media_type:
-    #         self.headers.setdefault("content-type", self.media_type)
 
     def render(self, content: Any) -> Any:
         return content

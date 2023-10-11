@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field, InitVar
+import inspect
 from typing import Union
 
 from seastar.endpoints import HttpEndpoint
@@ -21,11 +22,11 @@ def request_response(func: RequestHandler) -> EventHandler:
 class Route:
     path: str
     methods: list[str]
-    endpoint: InitVar[Union[HttpEndpoint, RequestHandler]]
+    endpoint: InitVar[Union[type[HttpEndpoint], RequestHandler]]
     handler: EventHandler = field(init=False)
 
-    def __post_init__(self, endpoint):
-        if isinstance(endpoint, HttpEndpoint):
+    def __post_init__(self, endpoint: Union[type[HttpEndpoint], RequestHandler]):
+        if inspect.isclass(endpoint) and issubclass(endpoint, HttpEndpoint):
             self.handler = endpoint()
         else:
             self.handler = request_response(endpoint)
