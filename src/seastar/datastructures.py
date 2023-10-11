@@ -4,17 +4,12 @@ from typing_extensions import Self
 from multidict import MultiDict, MultiDictProxy, CIMultiDict, CIMultiDictProxy
 
 
-class ImmutableMultiDict(MultiDictProxy[str, str]):
+class ImmutableMultiDict(MultiDictProxy):
     def __init__(self, *args, **kwargs):
         super().__init__(MultiDict(*args, **kwargs))
 
 
-class ImmutableCIMultiDict(CIMultiDictProxy[str, str]):
-    def __init__(self, *args, **kwargs):
-        super().__init__(CIMultiDict(*args, **kwargs))
-
-
-class UrlFormEncodedDict(ImmutableMultiDict[str, str]):
+class UrlFormEncodedMixin:
     def __str__(self):
         return urlencode(self)
 
@@ -23,11 +18,11 @@ class UrlFormEncodedDict(ImmutableMultiDict[str, str]):
         return cls(parse_qsl(s))
 
 
-class QueryParams(UrlFormEncodedDict[str, str]):
+class QueryParams(UrlFormEncodedMixin, ImmutableMultiDict):
     pass
 
 
-class FormData(UrlFormEncodedDict[str, str]):
+class FormData(UrlFormEncodedMixin, ImmutableMultiDict):
     pass
 
 
