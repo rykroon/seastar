@@ -1,35 +1,41 @@
 from collections.abc import Mapping
-from dataclasses import dataclass, field
 import json
-from typing import ClassVar, Optional
+from typing import Any, ClassVar, Optional
 
-from seastar.datastructures import MutableHeaders
 from seastar.json import JsonEncoder
-from seastar.types import HandlerResult, JSON
+from seastar.types import HandlerResult
 
 
-@dataclass
 class Response:
-    content_type: ClassVar[Optional[str]] = None
+    media_type: ClassVar[Optional[str]] = None
 
-    body: JSON = None
-    status_code: Optional[int] = None
-    headers: Mapping[str, str] = field(default_factory=dict)
+    def __init__(
+        self,
+        content: Any = None,
+        status_code: Optional[int] = None,
+        headers: Optional[Mapping[str, str]] = None,
+        media_type: Optional[str] = None
+    ):
+        if headers is None:
+            headers = {}
 
-    def __post_init__(self) -> None:
-        if not isinstance(self.headers, MutableHeaders):
-            self.headers = MutableHeaders(self.headers)
+        if media_type is not None:
+            self.media_type = media_type
 
-        if self.content_type:
-            self.headers["content-type"] = self.content_type
+        self.body = self.render(content)
+        self.status_code = status_code
+        self.headers = headers
 
-    def render_body(self) -> JSON:
-        return self.body
+        if self.media_type:
+            self.headers.setdefault("content-type", self.media_type)
+
+    def render(self, content: Any) -> Any:
+        return content
 
     def to_result(self) -> HandlerResult:
         result = {}
         if self.body is not None:
-            result["body"] = self.render_body()
+            result["body"] = self.body
 
         if self.status_code is not None:
             result["statusCode"] = self.status_code
@@ -41,19 +47,19 @@ class Response:
 
 
 class HtmlResponse(Response):
-    content_type = "text/html"
+    media_type = "text/html"
 
 
 class PlainTextResponse(Response):
-    content_type = "text/plain"
+    media_type = "text/plain"
 
 
 class JsonResponse(Response):
-    content_type = "application/json"
+    media_type = "application/json"
 
-    def render_body(self) -> str:
+    def render(self, content: Any) -> str:
         return json.dumps(
-            self.body,
+            content,
             ensure_ascii=False,
             allow_nan=False,
             cls=JsonEncoder,

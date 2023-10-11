@@ -45,15 +45,16 @@ class SeaStar:
         if HttpException not in exception_handlers:
             exception_handlers[HttpException] = http_exception
 
-        app = Router(routes=self.routes) # inner most layer.
-        app = ExceptionMiddleware(app=app, exception_handlers=exception_handlers)
+        handler = Router(routes=self.routes) # inner most layer.
+        handler = ExceptionMiddleware(handler=handler, exception_handlers=exception_handlers)
         ... # user middleware goes here.
-        app = ExceptionMiddleware(  # outer most layer.
-            app=app, exception_handlers={Exception: error_handler}
+        handler = ExceptionMiddleware(  # outer most layer.
+            handler=handler, exception_handlers={Exception: error_handler}
         )
-        return app
+        return handler
 
     def __call__(self, event: Event, context: Context) -> HandlerResult:
+        event.setdefault("__seastar", {}).setdefault("entry_point", self)
         if self.stack is None:
             self.stack = self.build_stack()
         return self.stack(event, context)
@@ -73,15 +74,16 @@ def seastar(
     error_handler = debug_response if debug else error_response
 
     def decorator(func: RequestHandler) -> EventHandler:
-        app = Route(path=path, methods=methods, app=func)
-        app = ExceptionMiddleware(
-            app=app, exception_handlers={
+        handler = Route(path=path, endpoint=func, methods=methods)
+        handler = ExceptionMiddleware(
+            handler=handler, exception_handlers={
                 Exception: error_handler, HttpException: http_exception
             }
         )
 
         def wrapper(event: Event, context: Context) -> HandlerResult:
-            return app(event, context)
+            event.setdefault("__seastar", {}).setdefault("entry_point", handler)
+            return handler(event, context)
 
         return wrapper
     return decorator

@@ -25,7 +25,7 @@ def request_response(handler: RequestExceptionHandler) -> EventExceptionHandler:
 
 @dataclass
 class ExceptionMiddleware:
-    app: EventHandler
+    handler: EventHandler
     exception_handlers: dict[
         ExceptionHandlerKey, ExceptionHandler
     ] = field(default_factory=dict)
@@ -40,7 +40,7 @@ class ExceptionMiddleware:
 
     def __call__(self, event: Event, context: Context) -> HandlerResult:
         try:
-            return self.app(event, context)
+            return self.handler(event, context)
 
         except Exception as e:
             handler = self.lookup_handler(e)

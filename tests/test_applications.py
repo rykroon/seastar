@@ -18,8 +18,8 @@ class TestSeaStarClass:
                 "queryString": "a=1&b=2",
             }
         }
-        app = SeaStar()
-        assert app(event, None) == {
+        handler = SeaStar()
+        assert handler(event, None) == {
             "body": "Not Found",
             "statusCode": 404,
             "headers": {"content-type": "text/plain"}
@@ -35,12 +35,12 @@ class TestSeaStarClass:
         def my_route(request):
             raise RuntimeError()
         
-        app = SeaStar(
-            routes=[Route(path="", methods=["GET"], app=my_route)],
+        handler = SeaStar(
+            routes=[Route(path="", methods=["GET"], endpoint=my_route)],
             exception_handlers={Exception: error_handler, RuntimeError: runtime_handler}
         )
         event = {"http": {"path": "", "method": "GET", "headers": {}}}
-        assert app(event, None) == "there was a runtime error."
+        assert handler(event, None) == "there was a runtime error."
 
 
 

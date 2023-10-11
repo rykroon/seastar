@@ -8,7 +8,7 @@ from seastar.types import Event, Context, HandlerResult, RequestHandler
 class HttpEndpoint:
 
     def __init__(self) -> None:
-        self.allowed_methods: list[str] = [
+        self.allowed_methods = [
             method
             for method in ("GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
             if getattr(self, method.lower(), None) is not None

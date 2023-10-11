@@ -15,8 +15,11 @@ def endpoint():
 
 class TestRoute:
     def test_not_found(self, endpoint):
-        event = {"http": {"path": "", "method": "GET", "headers": {}}}
-        route = Route("path", methods=["GET"], app=endpoint)
+        event = {
+            "http": {"path": "", "method": "GET", "headers": {}},
+            "__seastar": {"entry_point": None},
+        }
+        route = Route("path", methods=["GET"], endpoint=endpoint)
 
         assert route.matches("path", "GET") == (True, True)
 
@@ -24,44 +27,57 @@ class TestRoute:
             route(event, None)
 
     def test_method_not_allowed(self, endpoint):
-        event = {"http": {"path": "", "method": "GET", "headers": {}}}
-        route = Route("", methods=["POST"], app=endpoint)
+        event = {
+            "http": {"path": "", "method": "GET", "headers": {}},
+            "__seastar": {"entry_point": None},
+        }
+        route = Route("", methods=["POST"], endpoint=endpoint)
 
         with pytest.raises(HttpException):
             route(event, None)
 
     def test_success(self, endpoint):
-        event = {"http": {"path": "", "method": "GET", "headers": {}}}
-        route = Route("", methods=["GET"], app=endpoint)
+        event = {
+            "http": {"path": "", "method": "GET", "headers": {}}
+        }
+        route = Route("", methods=["GET"], endpoint=endpoint)
 
         assert route(event, None) == {"body": "OK"}
 
 
 class TestRouter:
     def test_not_found(self, endpoint):
-        event = {"http": {"path": "", "method": "GET", "headers": {}}}
-        route = Route("/path", methods=["GET"], app=endpoint)
+        event = {
+            "http": {"path": "", "method": "GET", "headers": {}},
+            "__seastar": {"entry_point": None},
+        }
+        route = Route("/path", methods=["GET"], endpoint=endpoint)
         router = Router(routes=[route])
 
         with pytest.raises(HttpException):
             router(event, None)
 
     def test_method_not_allowed(self, endpoint):
-        event = {"http": {"path": "", "method": "GET", "headers": {}}}
-        route = Route("", methods=["POST"], app=endpoint)
+        event = {
+            "http": {"path": "", "method": "GET", "headers": {}},
+            "__seastar": {"entry_point": None},
+        }
+        route = Route("", methods=["POST"], endpoint=endpoint)
         router = Router(routes=[route])
 
         with pytest.raises(HttpException):
             router(event, None)
 
     def test_success(self, endpoint):
-        event = {"http": {"path": "", "method": "GET", "headers": {}}}
-        route = Route("", methods=["GET"], app=endpoint)
+        event = {
+            "http": {"path": "", "method": "GET", "headers": {}},
+        }
+        route = Route("", methods=["GET"], endpoint=endpoint)
         router = Router(routes=[route])
         assert router(event, None) == {"body": "OK"}
 
     def test_add_route(self, endpoint):
         router = Router()
-        route = Route("", methods=["GET"], app=endpoint)
-        router.add_route(route)
+        router.add_route("", methods=["GET"], endpoint=endpoint)
         assert len(router.routes) == 1
+        assert isinstance(router.routes[0], Route)

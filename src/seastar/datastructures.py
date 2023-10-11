@@ -31,8 +31,9 @@ class FormData(UrlFormEncodedDict[str, str]):
     pass
 
 
-class Headers(ImmutableCIMultiDict[str, str]):
-    pass
+class Headers(CIMultiDictProxy[str, str]):
+    def __init__(self, *args, **kwargs):
+        super().__init__(CIMultiDict(*args, **kwargs))
 
 
 class MutableHeaders(CIMultiDict[str, str]):

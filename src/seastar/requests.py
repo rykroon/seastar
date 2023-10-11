@@ -2,9 +2,6 @@ from base64 import b64decode
 import json
 from typing import Any, Mapping
 from typing_extensions import Self
-from urllib.parse import parse_qsl
-
-from multidict import MultiDict, MultiDictProxy, CIMultiDict, CIMultiDictProxy
 
 from seastar.datastructures import Headers, QueryParams, FormData
 from seastar.exceptions import HttpException
@@ -12,12 +9,6 @@ from seastar.types import Event
 
 
 class Request:
-    method: str
-    path: str
-    query_params: QueryParams[str, str]
-    headers: Headers[str, str]
-    body: str
-    parameters: dict[str, Any]
 
     def __init__(
         self,
@@ -28,18 +19,16 @@ class Request:
         body: str,
         parameters: Mapping[str, str]
     ) -> None:
+        if not isinstance(query_params, QueryParams):
+            query_params = QueryParams(query_params)
+
+        if not isinstance(headers, Headers):
+            headers = Headers(headers)
+
         self.method = method
         self.path = path
-
-        if not isinstance(query_params, MultiDict):
-            query_params = MultiDict(query_params)
-
-        self.query_params = MultiDictProxy(query_params)
-
-        if not isinstance(headers, CIMultiDict):
-            headers = CIMultiDict(headers)
-
-        self.headers = CIMultiDictProxy(headers)
+        self.query_params = QueryParams(query_params)
+        self.headers = headers
         self.body = body
         self.parameters = parameters
 
@@ -49,7 +38,7 @@ class Request:
         http = event["http"]
 
         query_string = http.get("queryString", "")
-        query_params = parse_qsl(query_string)
+        query_params = QueryParams.from_string(query_string)
 
         body = http.get("body", "")
         if http.get("isBase64Encoded", False):
