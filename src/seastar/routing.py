@@ -1,4 +1,5 @@
-from typing import Optional, Union
+from dataclasses import dataclass, field, InitVar
+from typing import Union
 
 from seastar.endpoints import HttpEndpoint
 from seastar.exceptions import HttpException
@@ -16,21 +17,18 @@ def request_response(func: RequestHandler) -> EventHandler:
     return wrapper
 
 
+@dataclass
 class Route:
-    def __init__(
-        self,
-        path: str,
-        endpoint: Union[RequestHandler, HttpEndpoint],
-        methods: Optional[list[str]],
-    ):
-        self.path = path
+    path: str
+    methods: list[str]
+    endpoint: InitVar[Union[HttpEndpoint, RequestHandler]]
+    handler: EventHandler = field(init=False)
 
+    def __post_init__(self, endpoint):
         if isinstance(endpoint, HttpEndpoint):
             self.handler = endpoint()
         else:
             self.handler = request_response(endpoint)
-
-        self.methods = methods
 
     def __call__(self, event: Event, context: Context) -> HandlerResult:
         assert "http" in event, "Expected a web event."
@@ -59,9 +57,9 @@ class Route:
         return path == self.path, method in self.methods
 
 
+@dataclass
 class Router:
-    def __init__(self, routes: Optional[list[Route]] = None):
-        self.routes = [] if routes is None else list(routes)
+    routes: list[str] = field(default_factory=list)
 
     def __call__(self, event: Event, context: Context) -> HandlerResult:
         assert "http" in event, "Expected a web event."
