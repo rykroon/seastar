@@ -5,7 +5,6 @@ from typing import Union
 from seastar.endpoints import HttpEndpoint
 from seastar.exceptions import HttpException
 from seastar.requests import Request
-from seastar.responses import PlainTextResponse
 from seastar.types import Context, Event, EventHandler, HandlerResult, RequestHandler
 
 
@@ -38,19 +37,17 @@ class Route:
         )
 
         if self.path != event["http"]["path"]:
-            if is_entry_point:
-                return PlainTextResponse("Not Found", status_code=404)
-            else:
+            if not is_entry_point:
                 raise HttpException(404)
+
+            return {"body": "Not Found", "statusCode": 404}
 
         if event["http"]["method"] not in self.methods:
             headers = {"Allow": ", ".join(self.methods)}
-            if is_entry_point:
-                return PlainTextResponse(
-                    "Method Not Allowed", status_code=405, headers=headers
-                )
-            else:
+            if not is_entry_point:
                 raise HttpException(405, headers=headers)
+
+            return {"body": "Method Not Allowed", "statusCode": 405, "headers": headers}
 
         return self.handler(event, context)
 
@@ -78,19 +75,21 @@ class Router:
 
             if not method_match:
                 headers = {"Allow": ", ".join(route.methods)}
-                if is_entry_point:
-                    return PlainTextResponse(
-                        "Method Not Allowed", status_code=405, headers=headers
-                    )
-                else:
+                if not is_entry_point:
                     raise HttpException(405, headers=headers)
+
+                return {
+                    "body": "Method Not Allowed",
+                    "statusCode": 405,
+                    "headers": headers,
+                }
 
             return route(event, context)
 
-        if is_entry_point:
-            return PlainTextResponse("Not Found", status_code=404)
-        else:
+        if not is_entry_point:
             raise HttpException(404)
+
+        return {"body": "Not Found", "statusCode": 404}
 
     def add_route(self, path: str, methods: list[str], endpoint) -> None:
         self.routes.append(Route(path, methods=methods, endpoint=endpoint))
