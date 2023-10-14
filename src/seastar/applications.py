@@ -27,6 +27,7 @@ class SeaStar:
     stack: Optional[EventHandler] = field(default=None, init=False)
 
     def __post_init__(self, routes):
+        routes = [] if routes is None else list(routes)
         self.router = Router(routes=routes)
         # maybe remove this for performance.
         self.stack = self.build_stack()
