@@ -1,4 +1,8 @@
 from base64 import b64decode
+
+import pytest
+
+from seastar.exceptions import HttpException
 from seastar.requests import Request
 
 
@@ -83,3 +87,38 @@ class TestRequest:
         assert request.method == event["http"]["method"]
         assert request.path == event["http"]["path"]
         assert dict(request.query_params) == {}
+
+
+
+class TestRequestJson:
+
+    def test_unsupported_media_type(self):
+        event = {
+            "http": {
+                "body": '{"a": 1, "b": 2}',
+                "headers": {},
+                "isBase64Encoded": False,
+                "method": "POST",
+                "path": "",
+                "queryString": "",
+            }
+        }
+
+        request = Request.from_event(event)
+        with pytest.raises(HttpException):
+            request.json()
+    
+    def test_bad_request(self):
+        event = {
+            "http": {
+                "body": '{"a": 1, "b": 2',
+                "headers": {"content-type": "application/json"},
+                "isBase64Encoded": False,
+                "method": "POST",
+                "path": "",
+                "queryString": "",
+            }
+        }
+        request = Request.from_event(event)
+        with pytest.raises(HttpException):
+            request.json()

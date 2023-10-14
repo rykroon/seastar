@@ -1,7 +1,7 @@
-from seastar.responses import Response
+from seastar.responses import Response, JsonResponse
 
 
-class TestProcessResponse:
+class TestResponse:
     def test_response_body(self):
         resp = Response("Hello World")
         assert resp.to_result() == {"body": "Hello World"}
@@ -17,3 +17,10 @@ class TestProcessResponse:
             "statusCode": 200,
             "headers": {"foo": "bar"},
         }
+
+
+class TestJsonResponse:
+    def test_render(self):
+        content = {"hello": "world"}
+        resp = JsonResponse(content)
+        assert resp.body == '{"hello":"world"}'
