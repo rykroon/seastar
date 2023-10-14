@@ -57,11 +57,7 @@ class Route:
 
 @dataclass
 class Router:
-    routes: Optional[list[str]] = None
-
-    def __post_init__(self):
-        if self.routes is None:
-            self.routes = []
+    routes: list[str] = field(default_factory=list)
 
     def __call__(self, event: Event, context: Context) -> HandlerResult:
         assert "http" in event, "Expected a web event."

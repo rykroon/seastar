@@ -57,24 +57,26 @@ class TestRoute:
 
 class TestRouter:
     def test_not_found(self, endpoint):
-        event = {
-            "http": {"path": "", "method": "GET", "headers": {}},
-            "__seastar": {"entry_point": None},
-        }
         route = Route("/path", methods=["GET"], endpoint=endpoint)
         router = Router(routes=[route])
+        event = {"http": {"path": "", "method": "GET", "headers": {}},}
 
+        assert router(event, None) == {"body": "Not Found", "statusCode": 404}
+
+        event["__seastar"]["entry_point"] = object()
         with pytest.raises(HttpException):
             router(event, None)
 
     def test_method_not_allowed(self, endpoint):
-        event = {
-            "http": {"path": "", "method": "GET", "headers": {}},
-            "__seastar": {"entry_point": None},
-        }
         route = Route("", methods=["POST"], endpoint=endpoint)
         router = Router(routes=[route])
+        event = {"http": {"path": "", "method": "GET", "headers": {}},}
 
+        assert router(event, None) == {
+            "body": "Method Not Allowed", "statusCode": 405, "headers": {"Allow": "POST"}
+        }
+
+        event["__seastar"]["entry_point"] = object()
         with pytest.raises(HttpException):
             router(event, None)
 
@@ -91,3 +93,30 @@ class TestRouter:
         router.add_route("", methods=["GET"], endpoint=endpoint)
         assert len(router.routes) == 1
         assert isinstance(router.routes[0], Route)
+    
+    def test_route_decorator(self):
+        router = Router()
+        @router.route("", methods=["GET"])
+        def endpoint(request):
+            return Response()
+        
+        assert len(router.routes) == 1
+    
+    def test_get_decorator(self):
+        router = Router()
+        @router.get("")
+        def endpoint(request):
+            return Response()
+        
+        assert len(router.routes) == 1
+        assert router.routes[0].methods == ["GET"]
+    
+    def test_post_decorator(self):
+        router = Router()
+        @router.post("")
+        def endpoint(request):
+            return Response()
+        
+        assert len(router.routes) == 1
+        assert router.routes[0].methods == ["POST"]
+
