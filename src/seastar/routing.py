@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field, InitVar
 import inspect
-from typing import Union
+from typing import Optional, Union
 
 from seastar.endpoints import HttpEndpoint
 from seastar.exceptions import HttpException
@@ -57,7 +57,11 @@ class Route:
 
 @dataclass
 class Router:
-    routes: list[str] = field(default_factory=list)
+    routes: Optional[list[str]] = None
+
+    def __post_init__(self):
+        if self.routes is None:
+            self.routes = []
 
     def __call__(self, event: Event, context: Context) -> HandlerResult:
         assert "http" in event, "Expected a web event."

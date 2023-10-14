@@ -1,6 +1,6 @@
 
 
-from seastar.application import SeaStar, seastar
+from seastar.applications import SeaStar, seastar
 
 from seastar.responses import Response
 from seastar.routing import Route
@@ -29,18 +29,18 @@ class TestSeaStarClass:
         def error_handler(event, context, exc):
             return "There was an error."
 
-        def runtime_handler(event, context, exc):
-            return "there was a runtime error."
+        def runtime_handler(request, exc):
+            return Response("there was a runtime error.")
         
         def my_route(request):
             raise RuntimeError()
-        
+
         handler = SeaStar(
             routes=[Route(path="", methods=["GET"], endpoint=my_route)],
             exception_handlers={Exception: error_handler, RuntimeError: runtime_handler}
         )
         event = {"http": {"path": "", "method": "GET", "headers": {}}}
-        assert handler(event, None) == "there was a runtime error."
+        assert handler(event, None) == {"body": "there was a runtime error."}
 
 
 

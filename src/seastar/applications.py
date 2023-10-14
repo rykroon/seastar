@@ -1,9 +1,8 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, InitVar
 from typing import Optional
 
-from seastar.exceptions import HttpException
-from seastar.handlers import debug_response, error_response, http_exception
-from seastar.middleware import ExceptionMiddleware
+from seastar.middleware.errors import ServerErrorMiddleware
+from seastar.middleware.exceptions import ExceptionMiddleware
 from seastar.routing import Route, Router
 from seastar.types import (
     Context,
@@ -20,13 +19,15 @@ from seastar.types import (
 class SeaStar:
 
     debug: bool = True
-    routes: list[Route] = field(default_factory=list)
+    routes: InitVar[Optional[list[Route]]] = None 
     exception_handlers: dict[
         ExceptionHandlerKey, ExceptionHandler
     ] = field(default_factory=dict)
+    router: Router = field(init=False)
     stack: Optional[EventHandler] = field(default=None, init=False)
 
-    def __post_init__(self):
+    def __post_init__(self, routes):
+        self.router = Router(routes=routes)
         # maybe remove this for performance.
         self.stack = self.build_stack()
 
@@ -39,19 +40,13 @@ class SeaStar:
             else:
                 exception_handlers[key] = value
 
-        if error_handler is None:
-            error_handler = debug_response if self.debug else error_response
-
-        if HttpException not in exception_handlers:
-            exception_handlers[HttpException] = http_exception
-
-        handler = Router(routes=self.routes) # inner most layer.
-        handler = ExceptionMiddleware(handler=handler, exception_handlers=exception_handlers)
+        app = self.router
+        app = ExceptionMiddleware(app=app, handlers=exception_handlers)
         ... # user middleware goes here.
-        handler = ExceptionMiddleware(  # outer most layer.
-            handler=handler, exception_handlers={Exception: error_handler}
+        app = ServerErrorMiddleware(  # outer most layer.
+            app=app, handler=error_handler, debug=self.debug
         )
-        return handler
+        return app
 
     def __call__(self, event: Event, context: Context) -> HandlerResult:
         event.setdefault("__seastar", {}).setdefault("entry_point", self)
@@ -71,19 +66,14 @@ def seastar(
     if methods is None:
         methods = ["GET"]
 
-    error_handler = debug_response if debug else error_response
-
     def decorator(func: RequestHandler) -> EventHandler:
-        handler = Route(path=path, endpoint=func, methods=methods)
-        handler = ExceptionMiddleware(
-            handler=handler, exception_handlers={
-                Exception: error_handler, HttpException: http_exception
-            }
-        )
+        app = Route(path=path, endpoint=func, methods=methods)
+        app = ExceptionMiddleware(app=app)
+        app = ServerErrorMiddleware(app=app, debug=debug)
 
         def wrapper(event: Event, context: Context) -> HandlerResult:
-            event.setdefault("__seastar", {}).setdefault("entry_point", handler)
-            return handler(event, context)
+            event.setdefault("__seastar", {}).setdefault("entry_point", app)
+            return app(event, context)
 
         return wrapper
     return decorator
