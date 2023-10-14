@@ -1,5 +1,6 @@
 import pytest
 
+from seastar.endpoints import HttpEndpoint
 from seastar.exceptions import HttpException
 from seastar.routing import Route, Router
 from seastar.responses import Response
@@ -15,26 +16,37 @@ def endpoint():
 
 class TestRoute:
     def test_not_found(self, endpoint):
-        event = {
-            "http": {"path": "", "method": "GET", "headers": {}},
-            "__seastar": {"entry_point": None},
-        }
         route = Route("path", methods=["GET"], endpoint=endpoint)
+        event = {"http": {"path": "", "method": "GET", "headers": {}},}
 
-        assert route.matches("path", "GET") == (True, True)
-
+        # The route IS the entry point.
+        assert route(event, None) == {"body": "Not Found", "statusCode": 404}
+        
+        # the route is NOT the entry point.
+        event["__seastar"]["entry_point"] = object()
         with pytest.raises(HttpException):
             route(event, None)
 
     def test_method_not_allowed(self, endpoint):
-        event = {
-            "http": {"path": "", "method": "GET", "headers": {}},
-            "__seastar": {"entry_point": None},
-        }
         route = Route("", methods=["POST"], endpoint=endpoint)
+        event = {"http": {"path": "", "method": "GET", "headers": {}},}
 
+        # The route IS the entry point.
+        assert route(event, None) == {
+            "body": "Method Not Allowed", "statusCode": 405, "headers": {"Allow": "POST"}
+        }
+        
+        # the route is NOT the entry point.
+        event["__seastar"]["entry_point"] = object()
         with pytest.raises(HttpException):
             route(event, None)
+    
+    def test_http_endpoint(self):
+        class MyEndpoint(HttpEndpoint):
+            ...
+
+        route = Route("", methods=["GET"], endpoint=MyEndpoint)
+        assert isinstance(route.handler, HttpEndpoint)
 
     def test_success(self, endpoint):
         event = {"http": {"path": "", "method": "GET", "headers": {}}}
