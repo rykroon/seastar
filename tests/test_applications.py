@@ -1,5 +1,3 @@
-
-
 from seastar.applications import SeaStar, seastar
 
 from seastar.responses import Response
@@ -7,7 +5,6 @@ from seastar.routing import Route
 
 
 class TestSeaStarClass:
-
     def test_route_not_found(self):
         event = {
             "http": {
@@ -22,7 +19,7 @@ class TestSeaStarClass:
         assert handler(event, None) == {
             "body": "Not Found",
             "statusCode": 404,
-            "headers": {"content-type": "text/plain"}
+            "headers": {"content-type": "text/plain"},
         }
 
     def test_custom_exception_handlers(self):
@@ -31,25 +28,26 @@ class TestSeaStarClass:
 
         def runtime_handler(request, exc):
             return Response("there was a runtime error.")
-        
+
         def my_route(request):
             raise RuntimeError()
 
         handler = SeaStar(
             routes=[Route(path="", methods=["GET"], endpoint=my_route)],
-            exception_handlers={Exception: error_handler, RuntimeError: runtime_handler}
+            exception_handlers={
+                Exception: error_handler,
+                RuntimeError: runtime_handler,
+            },
         )
         event = {"http": {"path": "", "method": "GET", "headers": {}}}
         assert handler(event, None) == {"body": "there was a runtime error."}
 
 
-
 class TestSeaStarDecorator:
-
     def test_seastart(self):
         @seastar("")
         def my_route(request):
             return Response("hello world")
-        
+
         event = {"http": {"path": "", "method": "GET", "headers": {}}}
         assert my_route(event, None) == {"body": "hello world"}

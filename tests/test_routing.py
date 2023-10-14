@@ -37,9 +37,7 @@ class TestRoute:
             route(event, None)
 
     def test_success(self, endpoint):
-        event = {
-            "http": {"path": "", "method": "GET", "headers": {}}
-        }
+        event = {"http": {"path": "", "method": "GET", "headers": {}}}
         route = Route("", methods=["GET"], endpoint=endpoint)
 
         assert route(event, None) == {"body": "OK"}
