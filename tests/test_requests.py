@@ -89,9 +89,7 @@ class TestRequest:
         assert dict(request.query_params) == {}
 
 
-
 class TestRequestJson:
-
     def test_unsupported_media_type(self):
         event = {
             "http": {
@@ -107,7 +105,7 @@ class TestRequestJson:
         request = Request.from_event(event)
         with pytest.raises(HttpException):
             request.json()
-    
+
     def test_bad_request(self):
         event = {
             "http": {
