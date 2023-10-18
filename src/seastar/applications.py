@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field, InitVar
 from typing import Optional
 
+from seastar.middleware import Middleware
 from seastar.middleware.errors import ServerErrorMiddleware
 from seastar.middleware.exceptions import ExceptionMiddleware
 from seastar.routing import Route, Router
@@ -17,22 +18,24 @@ from seastar.types import (
 
 @dataclass
 class SeaStar:
-
     debug: bool = True
-    routes: InitVar[Optional[list[Route]]] = None 
+    routes: InitVar[Optional[list[Route]]] = None
+    middleware: InitVar[Optional[list[Middleware]]] = None
     exception_handlers: dict[
         ExceptionHandlerKey, ExceptionHandler
     ] = field(default_factory=dict)
-    router: Router = field(init=False)
-    stack: Optional[EventHandler] = field(default=None, init=False)
 
-    def __post_init__(self, routes):
+    router: Router = field(init=False)
+    user_middleware: list[Middleware] = field(init=False)
+    middleware_stack: Optional[EventHandler] = field(init=False, default=None)
+
+    def __post_init__(self, routes, middleware):
         routes = [] if routes is None else list(routes)
         self.router = Router(routes=routes)
-        # maybe remove this for performance.
-        self.stack = self.build_stack()
+        self.user_middleware = [] if middleware is None else list(middleware)
+        self.middleware_stack = self.build_middleware_stack()
 
-    def build_stack(self) -> EventHandler:
+    def build_middleware_stack(self) -> EventHandler:
         error_handler = None
         exception_handlers = {}
         for key, value in self.exception_handlers.items():
@@ -41,19 +44,25 @@ class SeaStar:
             else:
                 exception_handlers[key] = value
 
-        app = self.router
-        app = ExceptionMiddleware(app=app, handlers=exception_handlers)
-        ... # user middleware goes here.
-        app = ServerErrorMiddleware(  # outer most layer.
-            app=app, handler=error_handler, debug=self.debug
+        middleware = []
+        middleware.append(
+            Middleware(ServerErrorMiddleware, handler=error_handler, debug=self.debug)
         )
+        middleware.extend(self.user_middleware)
+        middleware.append(
+            Middleware(ExceptionMiddleware, handlers=exception_handlers)
+        )
+
+        app = self.router
+        for cls, options in reversed(middleware):
+            app = cls(app=app, **options)
         return app
 
     def __call__(self, event: Event, context: Context) -> HandlerResult:
         event.setdefault("__seastar", {}).setdefault("entry_point", self)
-        if self.stack is None:
-            self.stack = self.build_stack()
-        return self.stack(event, context)
+        if self.middleware_stack is None:
+            self.middleware_stack = self.build_middleware_stack()
+        return self.middleware_stack(event, context)
 
 
 def seastar(
