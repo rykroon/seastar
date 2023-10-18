@@ -1,6 +1,5 @@
-import inspect
 from typing import Any, Callable, Protocol, TypedDict, TYPE_CHECKING, Union
-from typing_extensions import NotRequired, TypeAlias, TypeGuard
+from typing_extensions import NotRequired, TypeAlias
 
 
 if TYPE_CHECKING:
