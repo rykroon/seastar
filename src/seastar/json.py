@@ -20,5 +20,3 @@ class JsonEncoder(JSONEncoder):
 
         elif isinstance(o, UUID):
             return str(o)
-
-        return super().default(o)
