@@ -5,12 +5,12 @@ from multidict import MultiDict, MultiDictProxy, CIMultiDict, CIMultiDictProxy
 
 
 class ImmutableMultiDict(MultiDictProxy):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(MultiDict(*args, **kwargs))
 
 
 class UrlFormEncodedMixin:
-    def __str__(self):
+    def __str__(self) -> str:
         return urlencode(self)
 
     @classmethod
@@ -27,7 +27,7 @@ class FormData(UrlFormEncodedMixin, ImmutableMultiDict):
 
 
 class Headers(CIMultiDictProxy[str, str]):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(CIMultiDict(*args, **kwargs))
 
 

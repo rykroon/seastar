@@ -24,16 +24,13 @@ class SeaStar:
     exception_handlers: dict[
         ExceptionHandlerKey, ExceptionHandler
     ] = field(default_factory=dict)
-
     router: Router = field(init=False)
     user_middleware: list[Middleware] = field(init=False)
     middleware_stack: Optional[EventHandler] = field(init=False, default=None)
 
-    def __post_init__(self, routes, middleware):
-        routes = [] if routes is None else list(routes)
+    def __post_init__(self, routes, middleware) -> None:
         self.router = Router(routes=routes)
         self.user_middleware = [] if middleware is None else list(middleware)
-        self.middleware_stack = self.build_middleware_stack()
 
     def build_middleware_stack(self) -> EventHandler:
         error_handler = None

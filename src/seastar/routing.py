@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field, InitVar
 import inspect
-from typing import Optional, Union
+from typing import Callable, Optional, Union
 
 from seastar.endpoints import HttpEndpoint
 from seastar.exceptions import HttpException
@@ -24,7 +24,7 @@ class Route:
     endpoint: InitVar[Union[type[HttpEndpoint], RequestHandler]]
     handler: EventHandler = field(init=False)
 
-    def __post_init__(self, endpoint: Union[type[HttpEndpoint], RequestHandler]):
+    def __post_init__(self, endpoint: Union[type[HttpEndpoint], RequestHandler]) -> None:
         if inspect.isclass(endpoint) and issubclass(endpoint, HttpEndpoint):
             self.handler = endpoint()
         else:
@@ -57,7 +57,10 @@ class Route:
 
 @dataclass
 class Router:
-    routes: list[str] = field(default_factory=list)
+    routes: Optional[list[Route]] = None
+
+    def __post_init__(self) -> None:
+        self.routes = [] if self.routes is None else list(self.routes)
 
     def __call__(self, event: Event, context: Context) -> HandlerResult:
         assert "http" in event, "Expected a web event."
@@ -91,17 +94,17 @@ class Router:
 
         return {"body": "Not Found", "statusCode": 404}
 
-    def add_route(self, path: str, methods: list[str], endpoint) -> None:
+    def add_route(self, path: str, methods: list[str], endpoint: RequestHandler) -> None:
         self.routes.append(Route(path, methods=methods, endpoint=endpoint))
 
-    def route(self, path: str, /, *, methods: list[str]):
-        def decorator(func):
+    def route(self, path: str, /, *, methods: list[str]) -> Callable[[RequestHandler], None]:
+        def decorator(func: RequestHandler) -> None:
             self.add_route(path, methods, func)
 
         return decorator
 
-    def get(self, path: str):
+    def get(self, path: str) -> Callable[[RequestHandler], None]:
         return self.route(path, methods=["GET"])
 
-    def post(self, path: str):
+    def post(self, path: str) -> Callable[[RequestHandler], None]:
         return self.route(path, methods=["POST"])

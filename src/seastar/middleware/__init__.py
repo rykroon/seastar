@@ -1,8 +1,9 @@
+from typing import Any
 
 
 class Middleware:
 
-    def __init__(self, cls, **options):
+    def __init__(self, cls, **options: Any):
         self.cls = cls
         self.options = options
     

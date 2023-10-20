@@ -22,7 +22,7 @@ class ExceptionMiddleware:
         ExceptionHandlerKey, RequestExceptionHandler
     ] = field(default_factory=dict)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.handlers.setdefault(HttpException, self.http_exception)
 
     def __call__(self, event: Event, context: Context) -> HandlerResult:
@@ -38,7 +38,7 @@ class ExceptionMiddleware:
             response = handler(request, e)
             return response.to_result()
 
-    def lookup_handler(self, exc: Exception) -> Optional[ExceptionHandler]:
+    def lookup_handler(self, exc: Exception) -> Optional[RequestExceptionHandler]:
         if isinstance(exc, HttpException):
             if exc.status_code in self.handlers:
                 return self.handlers[exc.status_code]

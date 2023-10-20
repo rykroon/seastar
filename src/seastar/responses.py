@@ -18,7 +18,7 @@ class Response:
 
     body: Any = field(init=False)
 
-    def __post_init__(self, content: Any, media_type: Optional[str]):
+    def __post_init__(self, content: Any, media_type: Optional[str]) -> None:
         self.body = self.render(content)
         content_type = media_type or self.default_media_type
         if content_type is not None:
