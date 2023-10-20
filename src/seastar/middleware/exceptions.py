@@ -7,7 +7,6 @@ from seastar.responses import Response, PlainTextResponse
 from seastar.types import (
     Context,
     Event,
-    ExceptionHandler,
     ExceptionHandlerKey,
     EventHandler,
     HandlerResult,
@@ -50,7 +49,7 @@ class ExceptionMiddleware:
         return None
 
     def add_exception_handler(
-        self, key: ExceptionHandlerKey, handler: ExceptionHandler
+        self, key: ExceptionHandlerKey, handler: RequestExceptionHandler
     ) -> None:
         self.handlers[key] = handler
     
