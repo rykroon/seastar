@@ -13,8 +13,8 @@ from seastar.types import Event
 class Request:
     method: str
     path: str
-    query_params: QueryParams[str, str]
-    headers: Headers[str, str]
+    query_params: QueryParams
+    headers: Headers
     body: str
     parameters: Mapping[str, str]
 
@@ -51,5 +51,5 @@ class Request:
         except json.JSONDecodeError:
             raise HttpException(400)
 
-    def form(self) -> FormData[str, str]:
+    def form(self) -> FormData:
         return FormData.from_string(self.body)

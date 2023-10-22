@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field, InitVar
-from typing import Optional
+from typing import Callable, Optional
 
 from seastar.middleware import Middleware
 from seastar.middleware.errors import ServerErrorMiddleware
@@ -28,7 +28,7 @@ class SeaStar:
     user_middleware: list[Middleware] = field(init=False)
     middleware_stack: Optional[EventHandler] = field(init=False, default=None)
 
-    def __post_init__(self, routes, middleware) -> None:
+    def __post_init__(self, routes: Optional[list[Route]], middleware: Optional[list[Middleware]]) -> None:
         self.router = Router(routes=routes)
         self.user_middleware = [] if middleware is None else list(middleware)
 
@@ -64,7 +64,7 @@ class SeaStar:
 
 def seastar(
     path: str = "", /, *, methods: Optional[list[str]] = None, debug: bool = False
-):
+) -> Callable[[RequestHandler], EventHandler]:
     """
         A simple decorator for a single function app.
         Could also work with an HttpEndpoint.

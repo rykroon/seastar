@@ -10,7 +10,7 @@ class HttpException(Exception):
     detail: Optional[str] = None
     headers: Mapping[str, str] = field(default_factory=dict)
     
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.detail is None:
             self.detail = HTTPStatus(self.status_code).phrase
         super().__init__(self.status_code, self.detail)
