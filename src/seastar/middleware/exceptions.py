@@ -52,8 +52,9 @@ class ExceptionMiddleware:
         self, key: ExceptionHandlerKey, handler: RequestExceptionHandler
     ) -> None:
         self.handlers[key] = handler
-    
-    def http_exception(self, request: Request, exc: HttpException) -> Response:
+
+    def http_exception(self, request: Request, exc: Exception) -> Response:
+        assert isinstance(exc, HttpException)
         return PlainTextResponse(
             content=exc.detail, status_code=exc.status_code, headers=exc.headers
         )

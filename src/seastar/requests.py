@@ -1,7 +1,8 @@
 from base64 import b64decode
+from collections.abc import Mapping
 from dataclasses import dataclass
 import json
-from typing import Any, Mapping
+from typing import Any
 from typing_extensions import Self
 
 from seastar.datastructures import Headers, QueryParams, FormData

@@ -1,4 +1,4 @@
-from collections.abc import Mapping
+from collections.abc import MutableMapping
 from dataclasses import dataclass, field, InitVar
 import json
 from typing import Any, ClassVar, Optional
@@ -13,7 +13,7 @@ class Response:
 
     content: InitVar[Any] = None
     status_code: Optional[int] = None
-    headers: Mapping[str, str] = field(default_factory=dict)
+    headers: MutableMapping[str, str] = field(default_factory=dict)
     media_type: InitVar[Optional[str]] = None
 
     body: Any = field(init=False)

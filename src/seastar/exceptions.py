@@ -1,4 +1,4 @@
-from collections.abc import Mapping
+from collections.abc import MutableMapping
 from dataclasses import dataclass, field
 from http import HTTPStatus
 from typing import Optional
@@ -8,7 +8,7 @@ from typing import Optional
 class HttpException(Exception):
     status_code: int
     detail: Optional[str] = None
-    headers: Mapping[str, str] = field(default_factory=dict)
+    headers: MutableMapping[str, str] = field(default_factory=dict)
     
     def __post_init__(self) -> None:
         if self.detail is None:
