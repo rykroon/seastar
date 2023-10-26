@@ -145,7 +145,7 @@ class FormData(UrlFormEncodedDict):
 
 
 class Headers(MultiDict[str, str]):
-    
+
     def __init__(
         self,
         arg: Union[Mapping[str, str], list[tuple[str, str]], None] = None,
