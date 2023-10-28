@@ -1,6 +1,6 @@
 import pytest
 
-from seastar.datastructures import MultiDict, MutableMultiDict
+from seastar.datastructures import MultiDict, MutableMultiDict, Headers
 
 
 @pytest.fixture
@@ -104,4 +104,19 @@ class TestMutableMultiDict:
         mutmultidict.append("a", 4)
         assert mutmultidict.getlist("a") == [1, 2, 3, 4]
     
+
+class TestHeaders:
+
+    def test_contains(self):
+        headers = Headers([("A", 1), ("B", 2)])
+        assert "a" in headers
+        assert "A" in headers
+    
+    def test_getitem(self):
+        headers = Headers([("A", 1), ("B", 2)])
+        assert headers["a"] == headers["A"]
+    
+    def test_getlist(self):
+        headers = Headers([("A", 1), ("B", 2), ("A", 2)])
+        assert headers.getlist("a") == headers.getlist("A")
 

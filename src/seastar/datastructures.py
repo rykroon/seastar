@@ -155,6 +155,9 @@ class Headers(MultiDict[str, str]):
         self._list = [(k.lower(), v) for k, v in self._list]
         self._dict = {k.lower(): v for k, v in self._dict.items()}
 
+    def getlist(self, key: str):
+        super().getlist(key.lower())
+
     def __getitem__(self, key: str):
         super().__getitem__(key.lower())
     
