@@ -22,7 +22,6 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
 ]
 dependencies = [
-  "multidict==6.*",
   "typing-extensions==4.*"
 ]
 
