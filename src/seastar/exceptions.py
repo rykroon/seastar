@@ -9,7 +9,7 @@ class HttpException(Exception):
     status_code: int
     detail: Optional[str] = None
     headers: MutableMapping[str, str] = field(default_factory=dict)
-    
+
     def __post_init__(self) -> None:
         if self.detail is None:
             self.detail = HTTPStatus(self.status_code).phrase

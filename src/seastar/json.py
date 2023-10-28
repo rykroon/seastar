@@ -8,7 +8,6 @@ from uuid import UUID
 
 
 class JsonEncoder(JSONEncoder):
-
     def default(self, o: Any) -> Any:
         if not inspect.isclass(o) and is_dataclass(o):
             return asdict(o)

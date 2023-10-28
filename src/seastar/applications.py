@@ -12,7 +12,7 @@ from seastar.types import (
     ExceptionHandler,
     EventHandler,
     HandlerResult,
-    RequestHandler
+    RequestHandler,
 )
 
 
@@ -21,14 +21,16 @@ class SeaStar:
     debug: bool = True
     routes: InitVar[Optional[list[Route]]] = None
     middleware: InitVar[Optional[list[Middleware]]] = None
-    exception_handlers: dict[
-        ExceptionHandlerKey, ExceptionHandler
-    ] = field(default_factory=dict)
+    exception_handlers: dict[ExceptionHandlerKey, ExceptionHandler] = field(
+        default_factory=dict
+    )
     router: Router = field(init=False)
     user_middleware: list[Middleware] = field(init=False)
     middleware_stack: Optional[EventHandler] = field(init=False, default=None)
 
-    def __post_init__(self, routes: Optional[list[Route]], middleware: Optional[list[Middleware]]) -> None:
+    def __post_init__(
+        self, routes: Optional[list[Route]], middleware: Optional[list[Middleware]]
+    ) -> None:
         self.router = Router(routes=routes)
         self.user_middleware = [] if middleware is None else list(middleware)
 
@@ -46,9 +48,7 @@ class SeaStar:
             Middleware(ServerErrorMiddleware, handler=error_handler, debug=self.debug)
         )
         middleware.extend(self.user_middleware)
-        middleware.append(
-            Middleware(ExceptionMiddleware, handlers=exception_handlers)
-        )
+        middleware.append(Middleware(ExceptionMiddleware, handlers=exception_handlers))
 
         app = self.router
         for cls, options in reversed(middleware):
@@ -66,8 +66,8 @@ def seastar(
     path: str = "", /, *, methods: Optional[list[str]] = None, debug: bool = False
 ) -> Callable[[RequestHandler], EventHandler]:
     """
-        A simple decorator for a single function app.
-        Could also work with an HttpEndpoint.
+    A simple decorator for a single function app.
+    Could also work with an HttpEndpoint.
     """
 
     if methods is None:
@@ -83,4 +83,5 @@ def seastar(
             return app(event, context)
 
         return wrapper
+
     return decorator

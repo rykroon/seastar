@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 
 Event: TypeAlias = dict[str, Any]
 
+
 class Context(Protocol):
     activation_id: str
     api_host: str
@@ -40,10 +41,12 @@ class Context(Protocol):
 
 JSON: TypeAlias = Union[dict[str, "JSON"], list["JSON"], str, int, float, bool, None]
 
+
 class WebResult(TypedDict):
     body: NotRequired[JSON]
     statusCode: NotRequired[int]
     headers: NotRequired[dict[str, str]]
+
 
 HandlerResult: TypeAlias = Union[WebResult, dict[str, JSON]]
 

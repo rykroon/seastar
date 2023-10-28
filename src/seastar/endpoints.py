@@ -23,7 +23,9 @@ class HttpEndpoint:
         is_entry_point = (
             event.setdefault("__seastar", {}).setdefault("entry_point", self) is self
         )
-        handler: Optional[RequestHandler] = getattr(self, event["http"]["method"].lower(), None)
+        handler: Optional[RequestHandler] = getattr(
+            self, event["http"]["method"].lower(), None
+        )
         if handler is None:
             headers = {"Allow": ", ".join(self.allowed_methods)}
             if is_entry_point:

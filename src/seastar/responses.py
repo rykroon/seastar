@@ -59,5 +59,5 @@ class JsonResponse(Response):
             allow_nan=False,
             cls=JsonEncoder,
             indent=None,
-            separators=(",", ":")
+            separators=(",", ":"),
         )

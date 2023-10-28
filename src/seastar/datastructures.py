@@ -10,15 +10,11 @@ V = TypeVar("V")
 
 
 class MultiDict(Mapping[K, V]):
-
     _list: list[tuple[K, V]]
     _dict: dict[K, V]
 
     def __init__(
-        self,
-        arg: Union[Mapping[K, V], list[tuple[K, V]], None] = None,
-        /,
-        **kwargs: V
+        self, arg: Union[Mapping[K, V], list[tuple[K, V]], None] = None, /, **kwargs: V
     ):
         self._list = []
 
@@ -70,7 +66,6 @@ class MultiDict(Mapping[K, V]):
 
 
 class MutableMultiDict(MultiDict):
-
     def __setitem__(self, key: Any, value: Any) -> None:
         self.setlist(key, [value])
 
@@ -117,7 +112,10 @@ class MutableMultiDict(MultiDict):
 
     def update(
         self,
-        arg: Union[Mapping[Any, Any], list[tuple[Any, Any]],],
+        arg: Union[
+            Mapping[Any, Any],
+            list[tuple[Any, Any]],
+        ],
         **kwargs: Any,
     ) -> None:
         value = MultiDict(arg, **kwargs)
@@ -127,14 +125,13 @@ class MutableMultiDict(MultiDict):
 
 
 class UrlFormEncodedDict(MultiDict[str, str]):
-
     def __str__(self):
         return urlencode(self._list)
 
     @classmethod
     def from_string(cls, s: str, /) -> Self:
         return cls(parse_qsl(s))
-    
+
 
 class QueryParams(UrlFormEncodedDict):
     pass
@@ -145,11 +142,10 @@ class FormData(UrlFormEncodedDict):
 
 
 class Headers(MultiDict[str, str]):
-
     def __init__(
         self,
         arg: Union[Mapping[str, str], list[tuple[str, str]], None] = None,
-        **kwargs: str
+        **kwargs: str,
     ):
         super().__init__(arg, **kwargs)
         self._list = [(k.lower(), v) for k, v in self._list]
@@ -160,21 +156,20 @@ class Headers(MultiDict[str, str]):
 
     def __getitem__(self, key: str):
         super().__getitem__(key.lower())
-    
+
     def __contains__(self, key: str):
         return super().__contains__(key.lower())
 
 
 class MutableHeaders(Headers, MutableMultiDict):
-    
     def __setitem__(self, key: str, value: str) -> None:
         super().__setitem__(key.lower(), value)
-    
+
     def __delitem__(self, key: str) -> None:
         super().__delitem__(key.lower())
-    
+
     def setdefault(self, key: str, value: str):
         super().setdefault(key.lower(), value)
-    
+
     def append(self, key: str, value: str) -> None:
         super().append(key.lower(), value)

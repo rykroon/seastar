@@ -24,7 +24,9 @@ class Route:
     endpoint: InitVar[Union[type[HttpEndpoint], RequestHandler]]
     handler: EventHandler = field(init=False)
 
-    def __post_init__(self, endpoint: Union[type[HttpEndpoint], RequestHandler]) -> None:
+    def __post_init__(
+        self, endpoint: Union[type[HttpEndpoint], RequestHandler]
+    ) -> None:
         if inspect.isclass(endpoint) and issubclass(endpoint, HttpEndpoint):
             self.handler = endpoint()
         else:
@@ -94,10 +96,14 @@ class Router:
 
         return {"body": "Not Found", "statusCode": 404}
 
-    def add_route(self, path: str, methods: list[str], endpoint: RequestHandler) -> None:
+    def add_route(
+        self, path: str, methods: list[str], endpoint: RequestHandler
+    ) -> None:
         self.routes.append(Route(path, methods=methods, endpoint=endpoint))
 
-    def route(self, path: str, /, *, methods: list[str]) -> Callable[[RequestHandler], None]:
+    def route(
+        self, path: str, /, *, methods: list[str]
+    ) -> Callable[[RequestHandler], None]:
         def decorator(func: RequestHandler) -> None:
             self.add_route(path, methods, func)
 

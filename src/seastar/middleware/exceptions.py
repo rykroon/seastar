@@ -10,16 +10,16 @@ from seastar.types import (
     ExceptionHandlerKey,
     EventHandler,
     HandlerResult,
-    RequestExceptionHandler
+    RequestExceptionHandler,
 )
 
 
 @dataclass
 class ExceptionMiddleware:
     app: EventHandler
-    handlers: dict[
-        ExceptionHandlerKey, RequestExceptionHandler
-    ] = field(default_factory=dict)
+    handlers: dict[ExceptionHandlerKey, RequestExceptionHandler] = field(
+        default_factory=dict
+    )
 
     def __post_init__(self) -> None:
         self.handlers.setdefault(HttpException, self.http_exception)
