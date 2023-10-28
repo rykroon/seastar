@@ -31,6 +31,7 @@ class SeaStar:
     def __post_init__(
         self, routes: Optional[list[Route]], middleware: Optional[list[Middleware]]
     ) -> None:
+        routes = [] if routes is None else list(routes)
         self.router = Router(routes=routes)
         self.user_middleware = [] if middleware is None else list(middleware)
 
@@ -51,8 +52,8 @@ class SeaStar:
         middleware.append(Middleware(ExceptionMiddleware, handlers=exception_handlers))
 
         app = self.router
-        for cls, options in reversed(middleware):
-            app = cls(app=app, **options)
+        for mw in reversed(middleware):
+            app = mw.cls(app=app, **mw.options)
         return app
 
     def __call__(self, event: Event, context: Context) -> HandlerResult:

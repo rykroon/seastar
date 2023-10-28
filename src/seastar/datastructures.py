@@ -1,8 +1,8 @@
-from collections.abc import ItemsView, Iterator, KeysView, Mapping, ValuesView
+from collections.abc import ItemsView, Iterator, KeysView, Mapping, Sequence, ValuesView
 from urllib.parse import parse_qsl, urlencode
-from typing import Any, TypeVar, Union
+from typing import Any, Optional, TypeVar, Union
 
-from typing_extensions import Self
+from typing_extensions import override, Self
 
 
 K = TypeVar("K")
@@ -14,7 +14,7 @@ class MultiDict(Mapping[K, V]):
     _dict: dict[K, V]
 
     def __init__(
-        self, arg: Union[Mapping[K, V], list[tuple[K, V]], None] = None, /, **kwargs: V
+        self, arg: Union[Mapping[K, V], Sequence[tuple[K, V]], None] = None,
     ):
         self._list = []
 
@@ -22,12 +22,9 @@ class MultiDict(Mapping[K, V]):
             itty = arg.items() if isinstance(arg, Mapping) else arg
             self._list.extend(itty)
 
-        if kwargs:
-            self._list.extend(kwargs.items())
-
         self._dict = dict(self._list)
 
-    def getlist(self, key: Any) -> list[V]:
+    def getlist(self, key: K) -> list[V]:
         return [item_value for item_key, item_value in self._list if item_key == key]
 
     def keys(self) -> KeysView[K]:
@@ -65,24 +62,24 @@ class MultiDict(Mapping[K, V]):
         return f"{class_name}({items!r})"
 
 
-class MutableMultiDict(MultiDict):
-    def __setitem__(self, key: Any, value: Any) -> None:
+class MutableMultiDict(MultiDict[K, V]):
+    def __setitem__(self, key: K, value: V) -> None:
         self.setlist(key, [value])
 
-    def __delitem__(self, key: Any) -> None:
+    def __delitem__(self, key: K) -> None:
         self._list = [(k, v) for k, v in self._list if k != key]
         del self._dict[key]
 
-    def pop(self, key: Any, default: Any = None) -> Any:
+    def pop(self, key: K, default: Optional[V] = None) -> Any:
         self._list = [(k, v) for k, v in self._list if k != key]
         return self._dict.pop(key, default)
 
-    def popitem(self) -> tuple[Any, Any]:
+    def popitem(self) -> tuple[K, V]:
         key, value = self._dict.popitem()
         self._list = [(k, v) for k, v in self._list if k != key]
         return key, value
 
-    def poplist(self, key: Any) -> list[Any]:
+    def poplist(self, key: K) -> list[V]:
         values = [v for k, v in self._list if k == key]
         self.pop(key)
         return values
@@ -91,14 +88,14 @@ class MutableMultiDict(MultiDict):
         self._dict.clear()
         self._list.clear()
 
-    def setdefault(self, key: Any, default: Any = None) -> Any:
+    def setdefault(self, key: K, default: V) -> V:
         if key not in self:
             self._dict[key] = default
             self._list.append((key, default))
 
         return self[key]
 
-    def setlist(self, key: Any, values: list[Any]) -> None:
+    def setlist(self, key: K, values: list[V]) -> None:
         if not values:
             self.pop(key, None)
         else:
@@ -106,15 +103,15 @@ class MutableMultiDict(MultiDict):
             self._list = existing_items + [(key, value) for value in values]
             self._dict[key] = values[-1]
 
-    def append(self, key: Any, value: Any) -> None:
+    def append(self, key: K, value: V) -> None:
         self._list.append((key, value))
         self._dict[key] = value
 
     def update(
         self,
         arg: Union[
-            Mapping[Any, Any],
-            list[tuple[Any, Any]],
+            Mapping[K, V],
+            Sequence[tuple[K, V]],
         ],
         **kwargs: Any,
     ) -> None:
@@ -125,7 +122,7 @@ class MutableMultiDict(MultiDict):
 
 
 class UrlFormEncodedDict(MultiDict[str, str]):
-    def __str__(self):
+    def __str__(self) -> str:
         return urlencode(self._list)
 
     @classmethod
@@ -144,32 +141,32 @@ class FormData(UrlFormEncodedDict):
 class Headers(MultiDict[str, str]):
     def __init__(
         self,
-        arg: Union[Mapping[str, str], list[tuple[str, str]], None] = None,
+        arg: Union[Mapping[str, str], Sequence[tuple[str, str]], None] = None,
         **kwargs: str,
     ):
         super().__init__(arg, **kwargs)
         self._list = [(k.lower(), v) for k, v in self._list]
         self._dict = {k.lower(): v for k, v in self._dict.items()}
 
-    def getlist(self, key: str):
-        super().getlist(key.lower())
+    def getlist(self, key: str) -> list[str]:
+        return super().getlist(key.lower())
 
-    def __getitem__(self, key: str):
-        super().__getitem__(key.lower())
+    def __getitem__(self, key: str) -> str:
+        return super().__getitem__(key.lower())
 
-    def __contains__(self, key: str):
+    def __contains__(self, key: Any) -> bool:
         return super().__contains__(key.lower())
 
 
-class MutableHeaders(Headers, MutableMultiDict):
+class MutableHeaders(Headers, MutableMultiDict[str, str]):
     def __setitem__(self, key: str, value: str) -> None:
         super().__setitem__(key.lower(), value)
 
     def __delitem__(self, key: str) -> None:
         super().__delitem__(key.lower())
 
-    def setdefault(self, key: str, value: str):
-        super().setdefault(key.lower(), value)
+    def setdefault(self, key: str, value: str) -> str:
+        return super().setdefault(key.lower(), value)
 
     def append(self, key: str, value: str) -> None:
         super().append(key.lower(), value)
