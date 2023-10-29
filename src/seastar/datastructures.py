@@ -14,7 +14,8 @@ class MultiDict(Mapping[K, V]):
     _dict: dict[K, V]
 
     def __init__(
-        self, arg: Union[Mapping[K, V], Sequence[tuple[K, V]], None] = None,
+        self,
+        arg: Union[Mapping[K, V], Sequence[tuple[K, V]], None] = None,
     ):
         self._list = []
 

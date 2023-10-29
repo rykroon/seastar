@@ -113,13 +113,12 @@ class Router:
 
     def post(self, path: str, /) -> Callable[[RequestHandler], RequestHandler]:
         return self.route(path, methods=["POST"])
-    
+
     def put(self, path: str, /) -> Callable[[RequestHandler], RequestHandler]:
         return self.route(path, methods=["PUT"])
-    
+
     def patch(self, path: str, /) -> Callable[[RequestHandler], RequestHandler]:
         return self.route(path, methods=["PATCH"])
 
     def delete(self, path: str, /) -> Callable[[RequestHandler], RequestHandler]:
         return self.route(path, methods=["DELETE"])
-
