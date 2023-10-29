@@ -62,6 +62,36 @@ class SeaStar:
             self.middleware_stack = self.build_middleware_stack()
         return self.middleware_stack(event, context)
 
+    def add_route(self, path: str, methods: list[str], endpoint: RequestHandler):
+        return self.router.add_route(path, methods, endpoint)
+    
+    def route(self, path: str, methods: list[str]):
+        return self.router.route(path, methods)
+
+    def get(self, path: str, /):
+        return self.router.get(path)
+    
+    def post(self, path: str, /):
+        return self.router.post(path)
+    
+    def put(self, path: str, /):
+        return self.router.put(path)
+    
+    def patch(self, path: str, /):
+        return self.router.delete(path)
+
+    def delete(self, path: str, /):
+        return self.router.delete(path)
+    
+    def add_exception_handler(self, exc: type[Exception], func):
+        self.exception_handlers[exc] = func
+
+    def exception_handler(self, exc: Exception):
+        def decorator(func):
+            self.add_exception_handler(exc, func)
+            return func
+        return decorator
+
 
 def seastar(
     path: str = "", /, *, methods: Optional[list[str]] = None, debug: bool = False

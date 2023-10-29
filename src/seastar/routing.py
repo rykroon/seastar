@@ -101,14 +101,25 @@ class Router:
 
     def route(
         self, path: str, /, *, methods: list[str]
-    ) -> Callable[[RequestHandler], None]:
-        def decorator(func: RequestHandler) -> None:
+    ) -> Callable[[RequestHandler], RequestHandler]:
+        def decorator(func: RequestHandler) -> RequestHandler:
             self.add_route(path, methods, func)
+            return func
 
         return decorator
 
-    def get(self, path: str) -> Callable[[RequestHandler], None]:
+    def get(self, path: str, /) -> Callable[[RequestHandler], RequestHandler]:
         return self.route(path, methods=["GET"])
 
-    def post(self, path: str) -> Callable[[RequestHandler], None]:
+    def post(self, path: str, /) -> Callable[[RequestHandler], RequestHandler]:
         return self.route(path, methods=["POST"])
+    
+    def put(self, path: str, /) -> Callable[[RequestHandler], RequestHandler]:
+        return self.route(path, methods=["PUT"])
+    
+    def patch(self, path: str, /) -> Callable[[RequestHandler], RequestHandler]:
+        return self.route(path, methods=["PATCH"])
+
+    def delete(self, path: str, /) -> Callable[[RequestHandler], RequestHandler]:
+        return self.route(path, methods=["DELETE"])
+
