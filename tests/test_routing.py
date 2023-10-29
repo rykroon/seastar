@@ -58,7 +58,7 @@ class TestRoute:
         event = {"http": {"path": "", "method": "GET", "headers": {}}}
         route = Route("", methods=["GET"], endpoint=endpoint)
 
-        assert route(event, None) == {"body": "OK"}
+        assert route(event, None) == {"body": "OK", "statusCode": 200}
 
 
 class TestRouter:
@@ -98,7 +98,7 @@ class TestRouter:
         }
         route = Route("", methods=["GET"], endpoint=endpoint)
         router = Router(routes=[route])
-        assert router(event, None) == {"body": "OK"}
+        assert router(event, None) == {"body": "OK", "statusCode": 200}
 
     def test_add_route(self, endpoint):
         router = Router()

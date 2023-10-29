@@ -27,7 +27,7 @@ class TestSeaStarClass:
             return "There was an error."
 
         def runtime_handler(request, exc):
-            return Response("there was a runtime error.")
+            return Response("there was a runtime error.", status_code=500)
 
         def my_route(request):
             raise RuntimeError()
@@ -40,14 +40,14 @@ class TestSeaStarClass:
             },
         )
         event = {"http": {"path": "", "method": "GET", "headers": {}}}
-        assert handler(event, None) == {"body": "there was a runtime error."}
+        assert handler(event, None) == {"body": "there was a runtime error.", "statusCode": 500}
 
 
 class TestSeaStarDecorator:
-    def test_seastart(self):
+    def test_seastar(self):
         @seastar("")
         def my_route(request):
             return Response("hello world")
 
         event = {"http": {"path": "", "method": "GET", "headers": {}}}
-        assert my_route(event, None) == {"body": "hello world"}
+        assert my_route(event, None) == {"body": "hello world", "statusCode": 200}

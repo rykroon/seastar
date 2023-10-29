@@ -2,7 +2,7 @@ from collections.abc import ItemsView, Iterator, KeysView, Mapping, Sequence, Va
 from urllib.parse import parse_qsl, urlencode
 from typing import Any, Optional, TypeVar, Union
 
-from typing_extensions import override, Self
+from typing_extensions import Self
 
 
 K = TypeVar("K")
