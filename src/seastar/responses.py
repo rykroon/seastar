@@ -34,7 +34,7 @@ class Response:
         if self.body is not None:
             result["body"] = self.body
 
-        if self.status_code is not None:
+        if self.status_code:
             result["statusCode"] = self.status_code
 
         if self.headers:
