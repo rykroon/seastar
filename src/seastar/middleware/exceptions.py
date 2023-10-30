@@ -58,11 +58,20 @@ class ExceptionMiddleware:
     def add_exception_handler(
         self, key: ExceptionHandlerKey, handler: RequestExceptionHandler
     ) -> None:
+        """
+        Thinking about adding logic where if the key is an int OR if the key is a
+            subclass of HttpException, then automatically wrap with request_response decorator.
+        """
         if isinstance(key, int):
             self.status_handlers[key] = handler
         else:
             assert issubclass(key, Exception)
             self.exception_handlers[key] = handler
+
+    def exception_handler(self, key: ExceptionHandlerKey):
+        def decorator(handler: ExceptionHandler):
+            self.add_exception_handler(key, handler)
+        return decorator
 
     def http_exception(self, request: Request, exc: Exception) -> Response:
         assert isinstance(exc, HttpException)
