@@ -68,7 +68,7 @@ class ExceptionMiddleware:
             assert issubclass(key, Exception)
             self.exception_handlers[key] = handler
 
-    def exception_handler(self, key: ExceptionHandlerKey):
+    def exception_handler(self, key: ExceptionHandlerKey, /):
         def decorator(handler: ExceptionHandler):
             self.add_exception_handler(key, handler)
         return decorator

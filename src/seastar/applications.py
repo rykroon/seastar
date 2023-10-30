@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field, InitVar
-from typing import Any, Callable, Optional
+from typing import Any, Optional
 
 from seastar.middleware import Middleware
 from seastar.middleware.errors import ServerErrorMiddleware
@@ -94,7 +94,7 @@ class SeaStar(App):
 
         return decorator
 
-    def route(self, path: str, methods: list[str]):
+    def route(self, path: str, /, *, methods: list[str]):
         return self.router.route(path, methods)
 
     def get(self, path: str, /):

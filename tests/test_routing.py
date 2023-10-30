@@ -59,6 +59,13 @@ class TestRoute:
         route = Route("", methods=["GET"], endpoint=endpoint)
 
         assert route(event, None) == {"body": "OK", "statusCode": 200}
+    
+    def test_route_decorator(self):
+        @Route.route("", methods=["GET"])
+        def handler(request):
+            ...
+        
+        assert isinstance(handler, Route)
 
 
 class TestRouter:
