@@ -57,6 +57,32 @@ class Route:
     def matches(self, path: str, method: str) -> tuple[bool, bool]:
         return path == self.path, method in self.methods
 
+    @classmethod
+    def route(cls, path: str, methods: list[str]):
+        def decorator(endpoint):
+            return cls(path, methods, endpoint)
+        return decorator
+
+    @classmethod
+    def get(cls, path: str):
+        return cls.route(path, methods=["GET"])
+
+    @classmethod
+    def post(cls, path: str):
+        return cls.route(path, methods=["POST"])
+
+    @classmethod
+    def put(cls, path: str):
+        return cls.route(path, methods=["PUT"])
+
+    @classmethod
+    def patch(cls, path: str):
+        return cls.route(path, methods=["PATCH"])
+
+    @classmethod
+    def delete(cls, path: str):
+        return cls.route(path, methods=["DELETE"])
+
 
 @dataclass
 class Router:
