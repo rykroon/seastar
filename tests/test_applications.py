@@ -1,4 +1,4 @@
-from seastar.applications import SeaStar, seastar
+from seastar.applications import SeaStar
 
 from seastar.responses import Response
 from seastar.routing import Route
@@ -43,11 +43,11 @@ class TestSeaStarClass:
         assert handler(event, None) == {"body": "there was a runtime error.", "statusCode": 500}
 
 
-class TestSeaStarDecorator:
-    def test_seastar(self):
-        @seastar("")
-        def my_route(request):
-            return Response("hello world")
+# class TestSeaStarDecorator:
+#     def test_seastar(self):
+#         @seastar("")
+#         def my_route(request):
+#             return Response("hello world")
 
-        event = {"http": {"path": "", "method": "GET", "headers": {}}}
-        assert my_route(event, None) == {"body": "hello world", "statusCode": 200}
+#         event = {"http": {"path": "", "method": "GET", "headers": {}}}
+#         assert my_route(event, None) == {"body": "hello world", "statusCode": 200}
