@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, InitVar
 from typing import Optional
 
 from seastar.exceptions import HttpException
@@ -7,6 +7,8 @@ from seastar.responses import Response, PlainTextResponse
 from seastar.types import (
     Context,
     Event,
+    EventExceptionHandler,
+    ExceptionHandler,
     ExceptionHandlerKey,
     EventHandler,
     HandlerResult,
@@ -17,12 +19,17 @@ from seastar.types import (
 @dataclass
 class ExceptionMiddleware:
     app: EventHandler
-    handlers: dict[ExceptionHandlerKey, RequestExceptionHandler] = field(
-        default_factory=dict
-    )
+    handlers: InitVar[Optional[dict[ExceptionHandlerKey, ExceptionHandler]]] = None
 
-    def __post_init__(self) -> None:
-        self.handlers.setdefault(HttpException, self.http_exception)
+    status_handlers: dict[int, RequestExceptionHandler] = field(init=False, default_factory=dict)
+    exception_handlers: dict[type[Exception], ExceptionHandler] = field(init=False, default_factory=dict)
+
+    def __post_init__(self, handlers: Optional[dict[ExceptionHandlerKey, ExceptionHandler]]) -> None:
+        if handlers is not None:
+            for k, v in handlers.items():
+                self.add_exception_handler(k, v)
+
+        self.exception_handlers.setdefault(HttpException, self.http_exception)
 
     def __call__(self, event: Event, context: Context) -> HandlerResult:
         try:
@@ -39,19 +46,23 @@ class ExceptionMiddleware:
 
     def lookup_handler(self, exc: Exception) -> Optional[RequestExceptionHandler]:
         if isinstance(exc, HttpException):
-            if exc.status_code in self.handlers:
-                return self.handlers[exc.status_code]
+            if exc.status_code in self.status_handlers:
+                return self.status_handlers[exc.status_code]
 
         for exc_class in type(exc).mro()[:-2]:
-            if exc_class in self.handlers:
-                return self.handlers[exc_class]
+            if exc_class in self.exception_handlers:
+                return self.exception_handlers[exc_class]
 
         return None
 
     def add_exception_handler(
         self, key: ExceptionHandlerKey, handler: RequestExceptionHandler
     ) -> None:
-        self.handlers[key] = handler
+        if isinstance(key, int):
+            self.status_handlers[key] = handler
+        else:
+            assert issubclass(key, Exception)
+            self.exception_handlers[key] = handler
 
     def http_exception(self, request: Request, exc: Exception) -> Response:
         assert isinstance(exc, HttpException)

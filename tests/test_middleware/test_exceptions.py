@@ -53,4 +53,5 @@ class TestExceptionMiddleware:
 
         mw = ExceptionMiddleware(app=handler)
         mw.add_exception_handler(Exception, exception_handler)
-        assert len(mw.handlers) == 2
+        assert len(mw.exception_handlers) == 2
+
