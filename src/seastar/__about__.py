@@ -7,11 +7,17 @@ __version__ = "0.4.0"
 """
 Ideas
 
-- Differentiate between a WebRoute and an EventRoute
-    - matches() raises NotImplementedError on BaseRoute
+- Routes will almost always only make sense within the context of web events.
+    - if a route or routes were to be used outside the context of a web event, it would
+    essentially be any ambiguous conditional logic which could just be added by the developer in
+    the function.
 
-- Exception Middleware can accept a is_web flag.
-    - This will allow the exception middleware to be used for non-web events.
+    So routes should always assume a function with the following signature:
+        def func(request: Request) -> Response: ...
+    
+    however when it comes to exceptions, one might prefer the def exc_handler(event, context, exc) over
+        def exc_handler(request, exc):
 
-
+ - orrrrr Just add a decorator for transforming a request exception handler to an event exception handler.
+ - use inspect.siganture to check if it has 2 or 3 parameters.
 """
