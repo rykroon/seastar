@@ -6,10 +6,9 @@ from typing import Any
 from typing_extensions import Self
 from urllib.parse import parse_qsl
 
-from starlette.datastructures import QueryParams
+from starlette.datastructures import FormData, Headers, QueryParams
 from starlette.exceptions import HTTPException
 
-from seastar.datastructures import Headers, FormData
 from seastar.types import Event
 
 
