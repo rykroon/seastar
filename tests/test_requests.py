@@ -2,7 +2,8 @@ from base64 import b64decode
 
 import pytest
 
-from seastar.exceptions import HttpException
+from starlette.exceptions import HTTPException
+
 from seastar.requests import Request
 
 
@@ -103,7 +104,7 @@ class TestRequestJson:
         }
 
         request = Request.from_event(event)
-        with pytest.raises(HttpException):
+        with pytest.raises(HTTPException):
             request.json()
 
     def test_bad_request(self):
@@ -118,5 +119,5 @@ class TestRequestJson:
             }
         }
         request = Request.from_event(event)
-        with pytest.raises(HttpException):
+        with pytest.raises(HTTPException):
             request.json()

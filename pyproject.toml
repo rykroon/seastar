@@ -22,6 +22,7 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
 ]
 dependencies = [
+  "starlette==0.31.*",
   "typing-extensions==4.*"
 ]
 

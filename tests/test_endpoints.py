@@ -1,7 +1,8 @@
 import pytest
 
+from starlette.exceptions import HTTPException
+
 from seastar.endpoints import HttpEndpoint
-from seastar.exceptions import HttpException
 from seastar.responses import Response
 
 
@@ -27,7 +28,7 @@ class TestEndpoint:
             "http": {"path": "", "method": "POST", "headers": {}},
             "__seastar": {"entry_point": None},
         }
-        with pytest.raises(HttpException):
+        with pytest.raises(HTTPException):
             endpoint(event, None)
 
     def test_success(self):

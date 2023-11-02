@@ -1,7 +1,8 @@
 import pytest
 
+from starlette.exceptions import HTTPException
+
 from seastar.endpoints import HttpEndpoint
-from seastar.exceptions import HttpException
 from seastar.routing import Route, Router
 from seastar.responses import Response
 
@@ -26,7 +27,7 @@ class TestRoute:
 
         # the route is NOT the entry point.
         event["__seastar"]["entry_point"] = object()
-        with pytest.raises(HttpException):
+        with pytest.raises(HTTPException):
             route(event, None)
 
     def test_method_not_allowed(self, endpoint):
@@ -44,7 +45,7 @@ class TestRoute:
 
         # the route is NOT the entry point.
         event["__seastar"]["entry_point"] = object()
-        with pytest.raises(HttpException):
+        with pytest.raises(HTTPException):
             route(event, None)
 
     def test_http_endpoint(self):
@@ -79,7 +80,7 @@ class TestRouter:
         assert router(event, None) == {"body": "Not Found", "statusCode": 404}
 
         event["__seastar"]["entry_point"] = object()
-        with pytest.raises(HttpException):
+        with pytest.raises(HTTPException):
             router(event, None)
 
     def test_method_not_allowed(self, endpoint):
@@ -96,7 +97,7 @@ class TestRouter:
         }
 
         event["__seastar"]["entry_point"] = object()
-        with pytest.raises(HttpException):
+        with pytest.raises(HTTPException):
             router(event, None)
 
     def test_success(self, endpoint):

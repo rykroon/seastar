@@ -4,9 +4,12 @@ from dataclasses import dataclass
 import json
 from typing import Any
 from typing_extensions import Self
+from urllib.parse import parse_qsl
 
-from seastar.datastructures import Headers, QueryParams, FormData
-from seastar.exceptions import HttpException
+from starlette.datastructures import QueryParams
+from starlette.exceptions import HTTPException
+
+from seastar.datastructures import Headers, FormData
 from seastar.types import Event
 
 
@@ -24,7 +27,7 @@ class Request:
         assert "http" in event, "Expected a web event."
         http = event["http"]
         query_string = http.get("queryString", "")
-        query_params = QueryParams.from_string(query_string)
+        query_params = QueryParams(query_string)
 
         body = http.get("body", "")
         if http.get("isBase64Encoded", False):
@@ -45,12 +48,12 @@ class Request:
 
     def json(self) -> Any:
         if self.headers.get("content-type") != "application/json":
-            raise HttpException(415)
+            raise HTTPException(415)
 
         try:
             return json.loads(self.body)
         except json.JSONDecodeError:
-            raise HttpException(400)
+            raise HTTPException(400)
 
     def form(self) -> FormData:
-        return FormData.from_string(self.body)
+        return FormData(parse_qsl(self.body))

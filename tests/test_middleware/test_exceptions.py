@@ -1,6 +1,7 @@
 import pytest
 
-from seastar.exceptions import HttpException
+from starlette.exceptions import HTTPException
+
 from seastar.middleware.exceptions import ExceptionMiddleware
 from seastar.responses import Response
 
@@ -35,9 +36,9 @@ class TestExceptionMiddleware:
 
     def test_http_exception_handler(self):
         def app(event, context):
-            raise HttpException(400)
+            raise HTTPException(400)
 
-        def exception_handler(request, exc: HttpException):
+        def exception_handler(request, exc: HTTPException):
             return Response(exc.detail, exc.status_code)
 
         mw = ExceptionMiddleware(app=app, handlers={400: exception_handler})

@@ -1,16 +1,16 @@
-from seastar.exceptions import HttpException
+from starlette.exceptions import HTTPException
 
 
 class TestHttpException:
     def test_default_message(self):
-        exc = HttpException(400)
+        exc = HTTPException(400)
         assert exc.detail == "Bad Request"
         assert exc.args == (400, "Bad Request")
 
     def test_custom_message(self):
-        exc = HttpException(400, "Shit!")
+        exc = HTTPException(400, "Shit!")
         assert exc.detail == "Shit!"
         assert exc.args == (400, "Shit!")
 
     def test_str(self):
-        assert str(HttpException(400)) == "400: Bad Request"
+        assert str(HTTPException(400)) == "400: Bad Request"
