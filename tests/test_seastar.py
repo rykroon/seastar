@@ -2,8 +2,6 @@ from seastar import web_function
 from seastar.responses import PlainTextResponse
 
 
-
-
 def test_webfunction():
 
     @web_function()

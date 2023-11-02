@@ -1,9 +1,7 @@
 from base64 import b64decode
-from collections.abc import Mapping
-from dataclasses import dataclass
+from functools import cached_property
 import json
 from typing import Any
-from typing_extensions import Self
 from urllib.parse import parse_qsl
 
 from starlette.datastructures import FormData, Headers, QueryParams
@@ -12,38 +10,44 @@ from starlette.exceptions import HTTPException
 from seastar.types import Event
 
 
-@dataclass
 class Request:
-    method: str
-    path: str
-    query_params: QueryParams
-    headers: Headers
-    body: str
-    parameters: Mapping[str, str]
 
-    @classmethod
-    def from_event(cls: type[Self], event: Event) -> Self:
-        assert "http" in event, "Expected a web event."
-        http = event["http"]
-        query_string = http.get("queryString", "")
-        query_params = QueryParams(query_string)
+    def __init__(self, event: Event):
+        assert "http" in event
+        self.event = event
+    
+    @cached_property
+    def path(self) -> str:
+        return self.event["http"]["path"]
+    
+    @cached_property
+    def method(self) -> str:
+        return self.event["http"]["method"]
 
-        body = http.get("body", "")
-        if http.get("isBase64Encoded", False):
+    @cached_property
+    def headers(self) -> Headers:
+        return Headers(self.event["http"]["headers"])
+    
+    @cached_property
+    def parameters(self):
+        return {
+            k: v
+            for k, v in self.event.items()
+            if not k.startswith("__") and k != "http"
+        }
+
+    @cached_property
+    def query_params(self):
+        assert "queryString" in self.event["http"], "Not a raw web event."
+        return QueryParams(self.event["http"]["queryString"])
+
+    @cached_property
+    def body(self) -> str:
+        assert "body" in self.event["http"], "Not a raw web event."
+        body = self.event["http"].get("body", "")
+        if self.event["http"].get("isBase64Encoded", False):
             body = b64decode(body).decode()
-
-        return cls(
-            method=http["method"],
-            path=http["path"],
-            query_params=query_params,
-            headers=http["headers"],
-            body=body,
-            parameters={
-                k: v
-                for k, v in event.items()
-                if not k.startswith("__") and k not in ["http"]
-            },
-        )
+        return body
 
     def json(self) -> Any:
         if self.headers.get("content-type") != "application/json":

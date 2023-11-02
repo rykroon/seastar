@@ -19,7 +19,7 @@ class TestRequest:
             }
         }
 
-        request = Request.from_event(event)
+        request = Request(event)
         assert request.body == event["http"]["body"]
         assert request.headers == event["http"]["headers"]
         assert request.method == event["http"]["method"]
@@ -38,7 +38,7 @@ class TestRequest:
             }
         }
 
-        request = Request.from_event(event)
+        request = Request(event)
         assert request.body == event["http"]["body"]
         assert request.headers == event["http"]["headers"]
         assert request.method == event["http"]["method"]
@@ -60,7 +60,7 @@ class TestRequest:
             }
         }
 
-        request = Request.from_event(event)
+        request = Request(event)
         assert request.body == event["http"]["body"]
         assert request.headers == event["http"]["headers"]
         assert request.method == event["http"]["method"]
@@ -82,7 +82,7 @@ class TestRequest:
             }
         }
 
-        request = Request.from_event(event)
+        request = Request(event)
         assert request.body == b64decode(event["http"]["body"].encode()).decode()
         assert request.headers == event["http"]["headers"]
         assert request.method == event["http"]["method"]
@@ -103,7 +103,7 @@ class TestRequestJson:
             }
         }
 
-        request = Request.from_event(event)
+        request = Request(event)
         with pytest.raises(HTTPException):
             request.json()
 
@@ -118,6 +118,6 @@ class TestRequestJson:
                 "queryString": "",
             }
         }
-        request = Request.from_event(event)
+        request = Request(event)
         with pytest.raises(HTTPException):
             request.json()

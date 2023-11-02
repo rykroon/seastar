@@ -4,7 +4,7 @@ from seastar.routing import Route
 
 def web_function(*, raw: bool = False):
     def decorator(func):
-        route = Route(path="", methods=None, endpoint=func)  
+        route = Route(path="", endpoint=func)  
         app = ExceptionMiddleware(route)
         return app
     return decorator

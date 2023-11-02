@@ -1,9 +1,6 @@
 import pytest
 
-from starlette.exceptions import HTTPException
-
 from seastar.middleware.exceptions import ExceptionMiddleware
-from seastar.responses import Response
 
 
 class TestExceptionMiddleware:
