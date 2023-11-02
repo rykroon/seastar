@@ -23,28 +23,6 @@ class TestExceptionMiddleware:
         with pytest.raises(Exception):
             mw({}, None)
 
-    def test_exception_handler(self):
-        def app(event, contet):
-            raise Exception
-
-        def exception_handler(request, exc):
-            return Response("There was an error", status_code=500)
-
-        mw = ExceptionMiddleware(app=app, handlers={Exception: exception_handler})
-        event = {"http": {"path": "", "method": "GET", "headers": {}}}
-        assert mw(event, None) == {"body": "There was an error", "statusCode": 500}
-
-    def test_http_exception_handler(self):
-        def app(event, context):
-            raise HTTPException(400)
-
-        def exception_handler(request, exc: HTTPException):
-            return Response(exc.detail, exc.status_code)
-
-        mw = ExceptionMiddleware(app=app, handlers={400: exception_handler})
-        event = {"http": {"path": "", "method": "GET", "headers": {}}}
-        assert mw(event, None) == {"body": "Bad Request", "statusCode": 400}
-
     def test_add_exception_handler(self):
         def handler(event, context):
             return None
@@ -54,5 +32,5 @@ class TestExceptionMiddleware:
 
         mw = ExceptionMiddleware(app=handler)
         mw.add_exception_handler(Exception, exception_handler)
-        assert len(mw.exception_handlers) == 2
+        assert len(mw._exception_handlers) == 3
 

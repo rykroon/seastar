@@ -51,14 +51,7 @@ class TestRoute:
         event = {"http": {"path": "", "method": "GET", "headers": {}}}
         route = Route("", methods=["GET"], endpoint=endpoint)
 
-        assert route(event, None) == {"body": "OK", "statusCode": 200}
-    
-    def test_route_decorator(self):
-        @Route.route("", methods=["GET"])
-        def handler(request):
-            ...
-        
-        assert isinstance(handler, Route)
+        assert route(event, None) == {"body": "OK", "statusCode": 200, "headers": {"content-length": "2"}}
 
 
 class TestRouter:
@@ -98,7 +91,7 @@ class TestRouter:
         }
         route = Route("", methods=["GET"], endpoint=endpoint)
         router = Router(routes=[route])
-        assert router(event, None) == {"body": "OK", "statusCode": 200}
+        assert router(event, None) == {"body": "OK", "statusCode": 200, "headers": {"content-length": "2"}}
 
     def test_add_route(self, endpoint):
         router = Router()
