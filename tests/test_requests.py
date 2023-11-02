@@ -21,7 +21,7 @@ class TestRequest:
 
         request = Request(event)
         assert request.body == event["http"]["body"]
-        assert request.headers == event["http"]["headers"]
+        assert dict(request.headers) == event["http"]["headers"]
         assert request.method == event["http"]["method"]
         assert request.path == event["http"]["path"]
         assert str(request.query_params) == event["http"]["queryString"]
@@ -40,7 +40,7 @@ class TestRequest:
 
         request = Request(event)
         assert request.body == event["http"]["body"]
-        assert request.headers == event["http"]["headers"]
+        assert dict(request.headers) == event["http"]["headers"]
         assert request.method == event["http"]["method"]
         assert request.path == event["http"]["path"]
         assert str(request.query_params) == ""
@@ -62,7 +62,7 @@ class TestRequest:
 
         request = Request(event)
         assert request.body == event["http"]["body"]
-        assert request.headers == event["http"]["headers"]
+        assert dict(request.headers) == event["http"]["headers"]
         assert request.method == event["http"]["method"]
         assert request.path == event["http"]["path"]
         assert str(request.query_params) == event["http"]["queryString"]
@@ -84,7 +84,7 @@ class TestRequest:
 
         request = Request(event)
         assert request.body == b64decode(event["http"]["body"].encode()).decode()
-        assert request.headers == event["http"]["headers"]
+        assert dict(request.headers) == event["http"]["headers"]
         assert request.method == event["http"]["method"]
         assert request.path == event["http"]["path"]
         assert dict(request.query_params) == {}

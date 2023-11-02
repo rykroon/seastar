@@ -26,7 +26,7 @@ class BaseRoute(_BaseRoute):
     
     def handle(self, event: Event, context: Context):
         raise NotImplementedError
-    
+
     def __call__(self, event: Event, context: Context):
         match, child_event = self.matches(event)
         if match == Match.NONE:
@@ -69,13 +69,13 @@ class Route(BaseRoute, _Route):
                     matched_params[key] = self.param_convertors[key].convert(value)
                 path_params = dict(event["http"].get("path_params", {}))
                 path_params.update(matched_params)
-                child_scope = {"endpoint": self.endpoint, "path_params": path_params}
+                child_event = {"path_params": path_params}
                 if self.methods and event["http"]["method"] not in self.methods:
-                    return Match.PARTIAL, child_scope
+                    return Match.PARTIAL, child_event
                 else:
-                    return Match.FULL, child_scope
+                    return Match.FULL, child_event
         return Match.NONE, {}
-    
+
     def handle(self, event: Event, context: Context) -> None:
         if self.methods and event["http"]["method"] not in self.methods:
             headers = {"Allow": ", ".join(self.methods)}

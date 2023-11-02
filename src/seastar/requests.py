@@ -6,6 +6,7 @@ from urllib.parse import parse_qsl
 
 from starlette.datastructures import FormData, Headers, QueryParams
 from starlette.exceptions import HTTPException
+from starlette.requests import cookie_parser
 
 from seastar.types import Event
 
@@ -15,7 +16,7 @@ class Request:
     def __init__(self, event: Event):
         assert "http" in event
         self.event = event
-    
+
     @cached_property
     def path(self) -> str:
         return self.event["http"]["path"]
@@ -27,7 +28,13 @@ class Request:
     @cached_property
     def headers(self) -> Headers:
         return Headers(self.event["http"]["headers"])
-    
+
+    @cached_property
+    def cookies(self):
+        if "cookie" in self.headers:
+            return cookie_parser(self.headers["cookie"])
+        return None
+
     @cached_property
     def parameters(self):
         return {
@@ -44,7 +51,7 @@ class Request:
     @cached_property
     def body(self) -> str:
         assert "body" in self.event["http"], "Not a raw web event."
-        body = self.event["http"].get("body", "")
+        body = self.event["http"]["body"]
         if self.event["http"].get("isBase64Encoded", False):
             body = b64decode(body).decode()
         return body

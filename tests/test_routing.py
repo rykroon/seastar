@@ -2,7 +2,7 @@ import pytest
 
 from starlette.exceptions import HTTPException
 
-from seastar.routing import Route
+from seastar.routing import Route, Match
 from seastar.responses import Response
 
 
@@ -30,6 +30,11 @@ class TestRoute:
         # event["__seastar"]["entry_point"] = object()
         # with pytest.raises(HTTPException):
         #     route(event, None)
+    
+    def test_matches(self, endpoint):
+        route = Route(path="/{id:int}", endpoint=endpoint)
+        event = {"http": {"path": "/123", "method": "GET", "headers": {}}}
+        assert route.matches(event) == (Match.FULL, {"path_params": {"id": 123}})
 
     def test_method_not_allowed(self, endpoint):
         route = Route("", methods=["POST"], endpoint=endpoint)
