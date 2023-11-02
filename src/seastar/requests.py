@@ -16,14 +16,23 @@ class Request:
     def __init__(self, event: Event):
         assert "http" in event
         self.event = event
+    
+    @cached_property
+    def method(self) -> str:
+        return self.event["http"]["method"]
 
     @cached_property
     def path(self) -> str:
         return self.event["http"]["path"]
     
     @cached_property
-    def method(self) -> str:
-        return self.event["http"]["method"]
+    def path_params(self):
+        return self.event["http"]["path_params"]
+
+    @cached_property
+    def query_params(self):
+        assert "queryString" in self.event["http"], "Not a raw web event."
+        return QueryParams(self.event["http"]["queryString"])
 
     @cached_property
     def headers(self) -> Headers:
@@ -36,25 +45,20 @@ class Request:
         return None
 
     @cached_property
-    def parameters(self):
-        return {
-            k: v
-            for k, v in self.event.items()
-            if not k.startswith("__") and k != "http"
-        }
-
-    @cached_property
-    def query_params(self):
-        assert "queryString" in self.event["http"], "Not a raw web event."
-        return QueryParams(self.event["http"]["queryString"])
-
-    @cached_property
     def body(self) -> str:
         assert "body" in self.event["http"], "Not a raw web event."
         body = self.event["http"]["body"]
         if self.event["http"].get("isBase64Encoded", False):
             body = b64decode(body).decode()
         return body
+
+    @cached_property
+    def parameters(self):
+        return {
+            k: v
+            for k, v in self.event.items()
+            if not k.startswith("__") and k != "http"
+        }
 
     def json(self) -> Any:
         if self.headers.get("content-type") != "application/json":
