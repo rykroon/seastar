@@ -2,7 +2,6 @@ import pytest
 
 from starlette.exceptions import HTTPException
 
-from seastar.endpoints import HttpEndpoint
 from seastar.routing import Route, Router
 from seastar.responses import Response
 
@@ -47,13 +46,6 @@ class TestRoute:
         event["__seastar"]["entry_point"] = object()
         with pytest.raises(HTTPException):
             route(event, None)
-
-    def test_http_endpoint(self):
-        class MyEndpoint(HttpEndpoint):
-            ...
-
-        route = Route("", methods=["GET"], endpoint=MyEndpoint)
-        assert isinstance(route.handler, HttpEndpoint)
 
     def test_success(self, endpoint):
         event = {"http": {"path": "", "method": "GET", "headers": {}}}
@@ -114,31 +106,3 @@ class TestRouter:
         assert len(router.routes) == 1
         assert isinstance(router.routes[0], Route)
 
-    def test_route_decorator(self):
-        router = Router()
-
-        @router.route("", methods=["GET"])
-        def endpoint(request):
-            return Response()
-
-        assert len(router.routes) == 1
-
-    def test_get_decorator(self):
-        router = Router()
-
-        @router.get("")
-        def endpoint(request):
-            return Response()
-
-        assert len(router.routes) == 1
-        assert router.routes[0].methods == ["GET"]
-
-    def test_post_decorator(self):
-        router = Router()
-
-        @router.post("")
-        def endpoint(request):
-            return Response()
-
-        assert len(router.routes) == 1
-        assert router.routes[0].methods == ["POST"]

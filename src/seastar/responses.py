@@ -4,8 +4,8 @@ from typing import Any, Optional
 
 from starlette import responses
 
+from seastar.datastructures import MutableHeaders
 from seastar.json import JsonEncoder
-from seastar.types import HandlerResult
 
 
 class Response(responses.Response):
@@ -21,7 +21,6 @@ class Response(responses.Response):
             Removed background paramter.
         """
         super().__init__(
-            self,
             content=content,
             status_code=status_code,
             headers=headers,
@@ -41,6 +40,12 @@ class Response(responses.Response):
 
     def render(self, content: Any) -> Any:
         return content
+    
+    @property
+    def headers(self) -> MutableHeaders:
+        if not hasattr(self, "_headers"):
+            self._headers = MutableHeaders(raw=self.raw_headers)
+        return self._headers
 
 
 class HTMLResponse(Response):
