@@ -5,6 +5,7 @@ from starlette.routing import (
     compile_path, get_name, BaseRoute as _BaseRoute, Match, Route as _Route
 )
 
+from seastar.exceptions import NonWebFunction
 from seastar.requests import Request
 from seastar.responses import PlainTextResponse
 from seastar.types import Context, Event, EventHandler, HandlerResult, RequestHandler
@@ -28,6 +29,9 @@ class BaseRoute(_BaseRoute):
         raise NotImplementedError
 
     def __call__(self, event: Event, context: Context):
+        if "http" not in event:
+            raise NonWebFunction("Event is not a web event.")
+
         match, child_event = self.matches(event)
         if match == Match.NONE:
             response = PlainTextResponse("Not Found", status_code=404)
@@ -35,10 +39,10 @@ class BaseRoute(_BaseRoute):
 
         event["http"].update(child_event)
         return self.handle(event, context)
-    
+
 
 class Route(BaseRoute, _Route):
-    
+
     def __init__(
         self,
         path: str,
@@ -61,20 +65,23 @@ class Route(BaseRoute, _Route):
         self.path_regex, self.path_format, self.param_convertors = compile_path(path)
 
     def matches(self, event: Event) -> tuple[Match, Event]:
-        if "http" in event:
-            match = self.path_regex.match(event["http"]["path"])
-            if match:
-                matched_params = match.groupdict()
-                for key, value in matched_params.items():
-                    matched_params[key] = self.param_convertors[key].convert(value)
-                path_params = dict(event["http"].get("path_params", {}))
-                path_params.update(matched_params)
-                child_event = {"path_params": path_params}
-                if self.methods and event["http"]["method"] not in self.methods:
-                    return Match.PARTIAL, child_event
-                else:
-                    return Match.FULL, child_event
-        return Match.NONE, {}
+        if "http" not in event:
+            raise NonWebFunction("Event is not a web event.")
+
+        match = self.path_regex.match(event["http"]["path"])
+        if not match:
+            return Match.NONE, {}
+
+        matched_params = match.groupdict()
+        for key, value in matched_params.items():
+            matched_params[key] = self.param_convertors[key].convert(value)
+        path_params = dict(event["http"].get("path_params", {}))
+        path_params.update(matched_params)
+        child_event = {"path_params": path_params}
+        if self.methods and event["http"]["method"] not in self.methods:
+            return Match.PARTIAL, child_event
+        else:
+            return Match.FULL, child_event
 
     def handle(self, event: Event, context: Context) -> None:
         if self.methods and event["http"]["method"] not in self.methods:
