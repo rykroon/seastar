@@ -20,8 +20,8 @@ def test_webfunction_with_errorhandlers():
     def event_handler(request):
         raise RuntimeError("shit!")
     
-    def error_handler(event, context, exc):
-        return {"body": str(exc)}
+    def error_handler(request, exc):
+        return PlainTextResponse(str(exc))
 
     event_handler.add_exception_handler(RuntimeError, error_handler)
     event = {"http": {"path": "", "method": "GET", "headers": {}}}

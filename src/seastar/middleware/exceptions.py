@@ -1,12 +1,16 @@
+from typing import Optional
+
 from starlette.exceptions import HTTPException
 from starlette.middleware import exceptions
 
+from seastar.requests import Request
 from seastar.responses import Response, PlainTextResponse
+from seastar.types import Context, Event, RequestExceptionHandler
 
 
 class ExceptionMiddleware(exceptions.ExceptionMiddleware):
     
-    def __call__(self, event, context):
+    def __call__(self, event: Event, context: Context):
         try:
             return self.app(event, context)
 
@@ -15,9 +19,11 @@ class ExceptionMiddleware(exceptions.ExceptionMiddleware):
             if handler is None:
                 raise e
 
-            return handler(event, context, e)
+            request = Request(event)
+            response = handler(request, e)
+            return response()
 
-    def lookup_handler(self, exc: Exception):
+    def lookup_handler(self, exc: Exception) -> Optional[RequestExceptionHandler]:
         if isinstance(exc, HTTPException):
             if exc.status_code in self._status_handlers:
                 return self._status_handlers[exc.status_code]
@@ -28,7 +34,7 @@ class ExceptionMiddleware(exceptions.ExceptionMiddleware):
 
         return None
 
-    def http_exception(self, event, context, exc: Exception):
+    def http_exception(self, request: Request, exc: Exception) -> Response:
         assert isinstance(exc, HTTPException)
         if exc.status_code in {204, 304}:
             return Response(status_code=exc.status_code, headers=exc.headers)
