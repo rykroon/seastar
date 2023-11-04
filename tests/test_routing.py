@@ -1,61 +1,101 @@
 import pytest
 
-from starlette.exceptions import HTTPException
-
 from seastar.routing import Route, Match
-from seastar.responses import Response
+from seastar.exceptions import NonWebFunction
+from seastar.requests import Request
+from seastar.responses import PlainTextResponse
 
 
-@pytest.fixture
-def endpoint():
-    def endpoint(request):
-        return Response("OK")
+def test_route_init():
+    def test_handler(request: Request):
+        return PlainTextResponse("Hello, world!")
 
-    return endpoint
+    route = Route("/", test_handler, methods=["POST"])
+    assert route.path == "/"
+    assert route.endpoint == test_handler
+    assert route.name == "test_handler"
+    assert route.methods == ["POST"]
 
 
-class TestRoute:
-    def test_not_found(self, endpoint):
-        route = Route("path", methods=["GET"], endpoint=endpoint)
-        event = {
-            "http": {"path": "", "method": "GET", "headers": {}},
-        }
+def test_route_full_match():
+    def test_handler(request: Request):
+        return PlainTextResponse("Hello, world!")
 
-        # The route IS the entry point.
-        result = route(event, None)
-        assert result["body"] == "Not Found"
-        assert result["statusCode"] == 404
+    route = Route("/", test_handler)
+    event = {"http": {"method": "GET", "path": "/"}}
+    match, _ = route.matches(event)
+    assert match == Match.FULL
 
-        # # the route is NOT the entry point.
-        # event["__seastar"]["entry_point"] = object()
-        # with pytest.raises(HTTPException):
-        #     route(event, None)
-    
-    def test_matches(self, endpoint):
-        route = Route(path="/{id:int}", endpoint=endpoint)
-        event = {"http": {"path": "/123", "method": "GET", "headers": {}}}
-        assert route.matches(event) == (Match.FULL, {"path_params": {"id": 123}})
 
-    def test_method_not_allowed(self, endpoint):
-        route = Route("", methods=["POST"], endpoint=endpoint)
-        event = {
-            "http": {"path": "", "method": "GET", "headers": {}},
-        }
+def test_route_partial_match():
+    def test_handler(request: Request):
+        return PlainTextResponse("Hello, world!")
 
-        # The route IS the entry point.
-        result = route(event, None)
-        assert result["body"] == "Method Not Allowed"
-        assert result["statusCode"] == 405
-        assert result["headers"]["allow"] == "POST"
+    route = Route("/", test_handler)
+    event = {"http": {"method": "POST", "path": "/"}}
+    match, _ = route.matches(event)
+    assert match == Match.PARTIAL
 
-        # # the route is NOT the entry point.
-        # event["__seastar"]["entry_point"] = object()
-        # with pytest.raises(HTTPException):
-        #     route(event, None)
 
-    def test_success(self, endpoint):
-        event = {"http": {"path": "", "method": "GET", "headers": {}}}
-        route = Route("", methods=["GET"], endpoint=endpoint)
+def test_route_no_match():
+    def test_handler(request: Request):
+        return PlainTextResponse("Hello, world!")
 
-        assert route(event, None) == {"body": "OK", "statusCode": 200, "headers": {"content-length": "2"}}
+    route = Route("/", test_handler)
+    event = {"http": {"method": "GET", "path": "/not-found"}}
+    match, _ = route.matches(event)
+    assert match == Match.NONE
 
+
+def test_route_match_with_path_params():
+    def test_handler(request: Request):
+        return PlainTextResponse("Hello, world!")
+
+    route = Route("/{name}", test_handler)
+    event = {"http": {"method": "GET", "path": "/james"}}
+    match, path_params = route.matches(event)
+    assert match == Match.FULL
+    assert path_params == {"name": "james"}
+
+
+def test_route_call():
+    def test_handler(request: Request):
+        return PlainTextResponse("Hello, world!")
+
+    route = Route("/", test_handler)
+    event = {"http": {"method": "GET", "path": "/"}}
+    result = route(event, None)
+    assert result["statusCode"] == 200
+    assert result["body"] == "Hello, world!"
+
+def test_route_non_web_function():
+    def test_handler(request: Request):
+        return PlainTextResponse("Hello, world!")
+
+    route = Route("/", test_handler)
+    event = {}
+    with pytest.raises(NonWebFunction):
+        route(event, None)
+
+
+def test_route_not_found():
+    def test_handler(request: Request):
+        return PlainTextResponse("Hello, world!")
+
+    route = Route("/", test_handler)
+    event = {"http": {"method": "GET", "path": "/not-found"}}
+    result = route(event, None)
+    assert result["statusCode"] == 404
+    assert result["body"] == "Not Found"
+
+
+def test_route_handle_method_not_allowed():
+    def test_handler(request: Request):
+        return PlainTextResponse("Hello, world!")
+
+    route = Route("/", test_handler, methods=["POST"])
+    event = {"http": {"method": "GET", "path": "/"}}
+    result = route(event, None)
+    assert result["statusCode"] == 405
+    assert result["body"] == "Method Not Allowed"
+    assert result["headers"]["allow"] == "POST"
