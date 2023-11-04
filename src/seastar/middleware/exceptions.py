@@ -31,6 +31,9 @@ class ExceptionMiddleware(exceptions.ExceptionMiddleware):
             response = handler(request, exc)
             return response()
 
+    # This is a hack to make this work in the cloud function environment.
+    __code__ = __call__.__code__
+
     def http_exception(self, request: Request, exc: Exception) -> Response:
         assert isinstance(exc, HTTPException)
         if exc.status_code in {204, 304}:
