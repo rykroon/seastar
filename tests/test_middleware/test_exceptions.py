@@ -1,33 +1,74 @@
 import pytest
 
+from starlette.exceptions import HTTPException
 from seastar.middleware.exceptions import ExceptionMiddleware
+from seastar.responses import PlainTextResponse
+from seastar.routing import request_response
 
 
-class TestExceptionMiddleware:
-    def test_no_exception_raised(self):
-        def app(event, context):
-            return "Hello World"
+def test_status_handlers():
+    @request_response
+    def app(request):
+        raise HTTPException(404)
 
-        mw = ExceptionMiddleware(app=app, handlers={})
-        assert mw({}, None) == "Hello World"
+    def not_found_handler(request, exc):
+        return PlainTextResponse("Not Found", status_code=404)
 
-    def test_exception_not_handled(self):
-        def app(event, context):
-            raise RuntimeError("You can't catch me!")
+    middleware = ExceptionMiddleware(
+        app, handlers={404: not_found_handler}
+    )
 
-        mw = ExceptionMiddleware(app=app, handlers={})
+    event = {"http": {"method": "GET"}}
+    response = middleware(event, None)
+    assert response["statusCode"] == 404
+    assert response["body"] == "Not Found"
 
-        with pytest.raises(Exception):
-            mw({}, None)
 
-    def test_add_exception_handler(self):
-        def handler(event, context):
-            return None
+def test_http_exception_no_content():
+    @request_response
+    def app(request):
+        raise HTTPException(204)
+    
+    middleware = ExceptionMiddleware(app)
 
-        def exception_handler(event, context, exc):
-            return None
+    event = {"http": {"method": "GET"}}
+    response = middleware(event, None)
+    assert response["statusCode"] == 204
+    assert "body" not in response
 
-        mw = ExceptionMiddleware(app=handler)
-        mw.add_exception_handler(Exception, exception_handler)
-        assert len(mw._exception_handlers) == 3
 
+def test_http_exception():
+    @request_response
+    def app(request):
+        raise HTTPException(404, "Not Found")
+
+    middleware = ExceptionMiddleware(app)
+
+    event = {"http": {"method": "GET"}}
+    response = middleware(event, None)
+    assert response["statusCode"] == 404
+    assert response["body"] == "Not Found"
+
+
+def test_exception_not_handled():
+    @request_response
+    def app(request):
+        raise ValueError("Not Found")
+
+    middleware = ExceptionMiddleware(app)
+
+    event = {"http": {"method": "GET"}}
+
+    with pytest.raises(ValueError):
+        middleware(event, None)
+
+
+def test_websocket_exception():
+    @request_response
+    def app(request):
+        return PlainTextResponse("Hello, world!")
+
+    middleware = ExceptionMiddleware(app)
+
+    with pytest.raises(NotImplementedError):
+        middleware.websocket_exception()

@@ -33,6 +33,7 @@ class ExceptionMiddleware(exceptions.ExceptionMiddleware):
         assert isinstance(exc, HTTPException)
         if exc.status_code in {204, 304}:
             return Response(status_code=exc.status_code, headers=exc.headers)
+
         return PlainTextResponse(
             exc.detail, status_code=exc.status_code, headers=exc.headers
         )
