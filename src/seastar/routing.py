@@ -32,6 +32,8 @@ class BaseRoute(_BaseRoute):
         if "http" not in event:
             raise NonWebFunction("Event is not a web event.")
 
+        _ = event.setdefault("__seastar", {}).setdefault("entry_point", self) is self
+
         match, path_params = self.matches(event)
         if match == Match.NONE:
             response = PlainTextResponse("Not Found", status_code=404)
@@ -87,7 +89,9 @@ class Route(BaseRoute, _Route):
         if event["http"]["method"] not in self.methods:
             headers = {"Allow": ", ".join(self.methods)}
 
-            if "app" not in event: # change this to entry_point??
+            is_entry_point = event.get("__seastar", {}).get("entry_point") is self
+
+            if is_entry_point:
                 response = PlainTextResponse(
                     "Method Not Allowed", status_code=405, headers=headers
                 )

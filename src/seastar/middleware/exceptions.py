@@ -10,6 +10,8 @@ from seastar.types import Context, Event
 class ExceptionMiddleware(exceptions.ExceptionMiddleware):
     
     def __call__(self, event: Event, context: Context):
+        _ = event.setdefault("__seastar", {}).setdefault("entry_point", self) is self
+
         try:
             return self.app(event, context)
 
