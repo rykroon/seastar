@@ -1,5 +1,3 @@
-from base64 import b64decode
-
 import pytest
 
 from starlette.exceptions import HTTPException
@@ -99,19 +97,20 @@ def test_json_body():
     assert request.json() == {"key": "value"}
 
 
-def test_json_body_not_json():
+def test_json_unsupported_media_type():
     event = {"http": {"body": "body", "headers": {"Content-Type": "text/plain"}}}
     request = Request(event)
-    with pytest.raises(HTTPException):
+    try:
         request.json()
 
+    except Exception as e:
+        assert isinstance(e, HTTPException)
+        assert e.status_code == 415
+    else:
+        assert False, "Expected exception"
 
-def test_json_invalid_json():
-    event = {"http": {"body": "body", "headers": {"Content-Type": "text/plain"}}}
-    request = Request(event)
-    with pytest.raises(HTTPException):
-        request.json()
 
+def test_json_bad_request():
     event = {
         "http": {
             "body": "invalid_json",
@@ -119,8 +118,13 @@ def test_json_invalid_json():
         }
     }
     request = Request(event)
-    with pytest.raises(HTTPException):
+    try:
         request.json()
+    except Exception as e:
+        assert isinstance(e, HTTPException)
+        assert e.status_code == 400
+    else:
+        assert False, "Expected exception"
 
 
 def test_form_body():
