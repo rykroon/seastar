@@ -1,26 +1,24 @@
-from seastar.responses import Response, JSONResponse
+from seastar.responses import HTMLResponse, JSONResponse, PlainTextResponse
 
 
-class TestResponse:
-    def test_response_body(self):
-        resp = Response("Hello World")
-        assert resp() == {"body": "Hello World", "statusCode": 200, "headers": {"content-length": "11"}}
-
-    def test_response_status_code(self):
-        resp = Response("Hello World", status_code=201)
-        assert resp() == {"body": "Hello World", "statusCode": 201, "headers": {"content-length": "11"}}
-
-    def test_response_headers(self):
-        resp = Response("Hello World", status_code=201, headers={"foo": "bar"}, )
-        assert resp() == {
-            "body": "Hello World",
-            "statusCode": 201,
-            "headers": {"content-length": "11", "foo": "bar"},
-        }
+def test_html_response():
+    response = HTMLResponse("Hello, World!")
+    assert response.status_code == 200
+    assert response.body == "Hello, World!"
+    assert response.headers["content-type"] == "text/html; charset=utf-8"
 
 
-class TestJsonResponse:
-    def test_render(self):
-        content = {"hello": "world"}
-        resp = JSONResponse(content)
-        assert resp.body == '{"hello":"world"}'
+def test_plain_text_response():
+    response = PlainTextResponse("Hello, World!")
+    assert response.status_code == 200
+    assert response.body == "Hello, World!"
+    assert response.headers["content-type"] == "text/plain; charset=utf-8"
+
+
+def test_json_response():
+    data = {"message": "Hello, World!"}
+    response = JSONResponse(data)
+    assert response.status_code == 200
+    assert response.body == '{"message":"Hello, World!"}'
+    assert response.headers["content-type"] == "application/json"
+
