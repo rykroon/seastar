@@ -1,5 +1,5 @@
 from collections.abc import Mapping
-from typing import Optional, Union
+from typing import Callable, Optional, Union
 
 from starlette._exception_handler import _lookup_exception_handler
 from starlette.exceptions import HTTPException
@@ -19,11 +19,13 @@ class ExceptionMiddleware:
     def __init__(
         self,
         app: EventHandler,
-        handlers: Optional[Mapping[Union[int, Exception], WebExceptionHandler]] = None,
+        handlers: Optional[
+            Mapping[Union[int, type[Exception]], WebExceptionHandler]
+        ] = None,
     ) -> None:
         self.app = app
         self._status_handlers: Mapping[int, WebExceptionHandler] = {}
-        self._exception_handlers: Mapping[Exception, WebExceptionHandler] = {
+        self._exception_handlers: Mapping[type[Exception], WebExceptionHandler] = {
             HTTPException: self.http_exception
         }
 
@@ -49,21 +51,23 @@ class ExceptionMiddleware:
     __code__ = __call__.__code__
 
     def add_exception_handler(
-        self, key: Union[int, Exception], handler: WebExceptionHandler
+        self, key: Union[int, type[Exception]], handler: WebExceptionHandler
     ) -> None:
         if isinstance(key, int):
             self._status_handlers[key] = handler
         else:
             self._exception_handlers[key] = handler
 
-    def lookup_handler(self, exc: Exception):
+    def lookup_handler(self, exc: Exception) -> Optional[WebExceptionHandler]:
         if isinstance(exc, HTTPException):
             if exc.status_code in self._status_handlers:
                 return self._status_handlers[exc.status_code]
 
         return _lookup_exception_handler(self._exception_handlers, exc)
 
-    def exception_handler(self, key: Union[int, Exception]) -> WebExceptionHandler:
+    def exception_handler(
+        self, key: Union[int, type[Exception]]
+    ) -> Callable[[WebExceptionHandler], WebExceptionHandler]:
         def decorator(func: WebExceptionHandler) -> WebExceptionHandler:
             self.add_exception_handler(key, func)
             return func
