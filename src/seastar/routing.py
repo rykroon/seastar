@@ -1,8 +1,8 @@
-from typing import Any, Callable, Optional
+from typing import Any, Optional
 
 from starlette.exceptions import HTTPException
 from starlette.routing import (
-    compile_path, get_name, BaseRoute as _BaseRoute, Match, Route as _Route
+    compile_path, get_name,BaseRoute as _BaseRoute, Match, Route as _Route
 )
 
 from seastar.exceptions import NonWebFunction
@@ -22,13 +22,13 @@ def request_response(func: WebHandler) -> EventHandler:
 
 class BaseRoute(_BaseRoute):
 
-    def matches(self, event: Event) -> tuple[Match, dict[str, Any]]:
+    def matches(self, event: Event) -> tuple[Match, dict[str, Any]]: # type: ignore[override]
         raise NotImplementedError
     
-    def handle(self, event: Event, context: Context) -> HandlerResult:
+    def handle(self, event: Event, context: Context) -> HandlerResult: # type: ignore[override]
         raise NotImplementedError
 
-    def __call__(self, event: Event, context: Context) -> HandlerResult:
+    def __call__(self, event: Event, context: Context) -> HandlerResult: # type: ignore[override]
         if "http" not in event:
             raise NonWebFunction("Event is not a web event.")
 
@@ -48,7 +48,7 @@ class Route(BaseRoute, _Route):
     def __init__(
         self,
         path: str,
-        endpoint: Callable[..., Any],
+        endpoint: WebHandler,
         *,
         methods: Optional[list[str]] = None,
         name: Optional[str] = None,
@@ -66,7 +66,7 @@ class Route(BaseRoute, _Route):
         self.app = request_response(endpoint)
         self.path_regex, self.path_format, self.param_convertors = compile_path(path)
 
-    def matches(self, event: Event) -> tuple[Match, dict[str, Any]]:
+    def matches(self, event: Event) -> tuple[Match, dict[str, Any]]: # type: ignore[override]
         match = self.path_regex.match(event["http"]["path"])
         if not match:
             return Match.NONE, {}
@@ -83,7 +83,7 @@ class Route(BaseRoute, _Route):
 
         return Match.FULL, path_params
 
-    def handle(self, event: Event, context: Context) -> HandlerResult:
+    def handle(self, event: Event, context: Context) -> HandlerResult: # type: ignore[override]
         assert "http" in event, "Event is not a web event."
 
         if event["http"]["method"] not in self.methods:

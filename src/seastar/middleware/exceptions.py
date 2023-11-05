@@ -24,7 +24,7 @@ class ExceptionMiddleware(exceptions.ExceptionMiddleware):
     ):
         super().__init__(app, handlers)
 
-    def __call__(self, event: Event, context: Context) -> HandlerResult:
+    def __call__(self, event: Event, context: Context) -> HandlerResult: # type: ignore[override]
         _ = event.setdefault("__seastar", {}).setdefault("entry_point", self) is self
 
         try:
@@ -49,7 +49,7 @@ class ExceptionMiddleware(exceptions.ExceptionMiddleware):
     # This is a hack to make this work in the cloud function environment.
     __code__ = __call__.__code__
 
-    def http_exception(self, request: Request, exc: Exception) -> Response:
+    def http_exception(self, request: Request, exc: Exception) -> Response: # type: ignore[override]
         assert isinstance(exc, HTTPException)
         if exc.status_code in {204, 304}:
             return Response(status_code=exc.status_code, headers=exc.headers)

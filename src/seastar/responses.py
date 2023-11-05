@@ -28,7 +28,7 @@ class Response(responses.Response):
             background=None
         )
 
-    def __call__(self) -> HandlerResult:
+    def __call__(self) -> HandlerResult: # type: ignore[override]
         result = {"statusCode": self.status_code}
         if self.body is not None:
             result["body"] = self.body
@@ -53,7 +53,7 @@ class PlainTextResponse(Response):
 class JSONResponse(Response):
     media_type = "application/json"
 
-    def render(self, content: Any) -> str:
+    def render(self, content: Any) -> str: # type: ignore[override]
         return json.dumps(
             content,
             ensure_ascii=False,
