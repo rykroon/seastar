@@ -1,9 +1,8 @@
 from collections.abc import Mapping
-from typing import Any, Optional
+from typing import Optional, Union
 
 from starlette._exception_handler import _lookup_exception_handler
 from starlette.exceptions import HTTPException
-from starlette.middleware import exceptions
 
 from seastar.requests import Request
 from seastar.responses import Response, PlainTextResponse
@@ -16,29 +15,31 @@ from seastar.types import (
 )
 
 
-class ExceptionMiddleware(exceptions.ExceptionMiddleware):
+class ExceptionMiddleware:
+
     def __init__(
         self,
         app: EventHandler,
-        handlers: Optional[Mapping[Any, WebExceptionHandler]] = None,
-    ):
-        super().__init__(app, handlers)
+        handlers: Optional[Mapping[Union[int, Exception], WebExceptionHandler]] = None,
+    ) -> None:
+        self.app = app
+        self._status_handlers: Mapping[int, WebExceptionHandler] = {}
+        self._exception_handlers: Mapping[Exception, WebExceptionHandler] = {
+            HTTPException: self.http_exception
+        }
 
-    def __call__(self, event: Event, context: Context) -> HandlerResult: # type: ignore[override]
+        if handlers is not None:
+            for key, value in handlers.items():
+                self.add_exception_handler(key, value)
+    
+    def __call__(self, event: Event, context: Context) -> HandlerResult:
         _ = event.setdefault("__seastar", {}).setdefault("entry_point", self) is self
 
         try:
             return self.app(event, context)
 
         except Exception as exc:
-            handler = None
-
-            if isinstance(exc, HTTPException):
-                handler = self._status_handlers.get(exc.status_code)
-
-            if handler is None:
-                handler = _lookup_exception_handler(self._exception_handlers, exc)
-
+            handler = self.lookup_handler(exc)
             if handler is None:
                 raise exc
 
@@ -46,10 +47,29 @@ class ExceptionMiddleware(exceptions.ExceptionMiddleware):
             response = handler(request, exc)
             return response()
 
-    # This is a hack to make this work in the cloud function environment.
+    
     __code__ = __call__.__code__
 
-    def http_exception(self, request: Request, exc: Exception) -> Response: # type: ignore[override]
+    def add_exception_handler(self, key: Union[int, Exception], handler: WebExceptionHandler) -> None:
+        if isinstance(key, int):
+            self._status_handlers[key] = handler
+        else:
+            self._exception_handlers[key] = handler
+
+    def lookup_handler(self, exc: Exception):
+        if isinstance(exc, HTTPException):
+            if exc.status_code in self._status_handlers:
+                return self._status_handlers[exc.status_code]
+
+        return _lookup_exception_handler(self._exception_handlers, exc)
+
+    def exception_handler(self, key: Union[int, Exception]  ) -> WebExceptionHandler:
+        def decorator(func: WebExceptionHandler) -> WebExceptionHandler:
+            self.add_exception_handler(key, func)
+            return func
+        return decorator
+    
+    def http_exception(self, request: Request, exc: Exception) -> Response:
         assert isinstance(exc, HTTPException)
         if exc.status_code in {204, 304}:
             return Response(status_code=exc.status_code, headers=exc.headers)
@@ -57,6 +77,3 @@ class ExceptionMiddleware(exceptions.ExceptionMiddleware):
         return PlainTextResponse(
             exc.detail, status_code=exc.status_code, headers=exc.headers
         )
-
-    def websocket_exception(self):
-        raise NotImplementedError

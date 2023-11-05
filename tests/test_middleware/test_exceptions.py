@@ -61,14 +61,3 @@ def test_exception_not_handled():
 
     with pytest.raises(ValueError):
         middleware(event, None)
-
-
-def test_websocket_exception():
-    @request_response
-    def app(request):
-        return PlainTextResponse("Hello, world!")
-
-    middleware = ExceptionMiddleware(app)
-
-    with pytest.raises(NotImplementedError):
-        middleware.websocket_exception()
