@@ -1,7 +1,7 @@
 from base64 import b64decode
 from functools import cached_property
 import json
-from typing import Any
+from typing import Any, Optional
 from urllib.parse import parse_qsl
 
 from starlette.datastructures import FormData, Headers, QueryParams
@@ -29,11 +29,11 @@ class Request:
         return self.event["http"]["path"]
 
     @cached_property
-    def path_params(self):
+    def path_params(self) -> dict[str, str]:
         return self.event["http"].get("path_params", {})
 
     @cached_property
-    def query_params(self):
+    def query_params(self) -> QueryParams:
         if "queryString" not in self.event["http"]:
             raise NotRawHttp("Must activate raw http to use query params.")
 
@@ -44,7 +44,7 @@ class Request:
         return Headers(self.event["http"]["headers"])
 
     @cached_property
-    def cookies(self):
+    def cookies(self) -> Optional[dict[str, str]]:
         if "cookie" in self.headers:
             return cookie_parser(self.headers["cookie"])
         return None
@@ -60,7 +60,7 @@ class Request:
         return body
 
     @cached_property
-    def parameters(self):
+    def parameters(self) -> dict[str, Any]:
         return {
             k: v
             for k, v in self.event.items()

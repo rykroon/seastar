@@ -28,7 +28,7 @@ def test_route_init():
     assert route.path == "/"
     assert route.endpoint == handler
     assert route.name == "handler"
-    assert route.methods == ["POST"]
+    assert route.methods == {"POST"}
 
 
 def test_route_full_match():

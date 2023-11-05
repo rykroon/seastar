@@ -8,7 +8,24 @@ if TYPE_CHECKING:
     from seastar.responses import Response
 
 
-Event: TypeAlias = dict[str, Any]
+
+class HttpDict(TypedDict):
+    method: str
+    path: str
+    headers: dict[str, str]
+    queryString: NotRequired[str]
+    body: NotRequired[str]
+    isBase64Encoded: NotRequired[bool]
+    path_params: NotRequired[dict[str, str]]
+
+
+class Event(TypedDict):
+    http: NotRequired[HttpDict]
+    __seastar: NotRequired[dict[str, Any]]
+
+
+class WebEvent(TypedDict):
+    http: HttpDict
 
 
 class Context(Protocol):
@@ -51,10 +68,10 @@ class WebResult(TypedDict):
 HandlerResult: TypeAlias = Union[WebResult, dict[str, JSON]]
 
 EventHandler: TypeAlias = Callable[[Event, Context], HandlerResult]
-RequestHandler: TypeAlias = Callable[["Request"], "Response"]
-Handler: TypeAlias = Union[EventHandler, RequestHandler]
+WebHandler: TypeAlias = Callable[["Request"], "Response"]
+Handler: TypeAlias = Union[EventHandler, WebHandler]
 
 ExceptionHandlerKey: TypeAlias = Union[int, type[Exception]]
 EventExceptionHandler: TypeAlias = Callable[[Event, Context, Exception], HandlerResult]
-RequestExceptionHandler: TypeAlias = Callable[["Request", Exception], "Response"]
-ExceptionHandler: TypeAlias = Union[EventExceptionHandler, RequestExceptionHandler]
+WebExceptionHandler: TypeAlias = Callable[["Request", Exception], "Response"]
+ExceptionHandler: TypeAlias = Union[EventExceptionHandler, WebExceptionHandler]

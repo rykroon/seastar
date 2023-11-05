@@ -8,10 +8,10 @@ from starlette.routing import (
 from seastar.exceptions import NonWebFunction
 from seastar.requests import Request
 from seastar.responses import PlainTextResponse
-from seastar.types import Context, Event, EventHandler, HandlerResult, RequestHandler
+from seastar.types import Context, Event, EventHandler, HandlerResult, WebHandler
 
 
-def request_response(func: RequestHandler) -> EventHandler:
+def request_response(func: WebHandler) -> EventHandler:
     def wrapper(event: Event, context: Context) -> HandlerResult:
         request = Request(event)
         response = func(request)
@@ -25,10 +25,10 @@ class BaseRoute(_BaseRoute):
     def matches(self, event: Event) -> tuple[Match, dict[str, Any]]:
         raise NotImplementedError
     
-    def handle(self, event: Event, context: Context):
+    def handle(self, event: Event, context: Context) -> HandlerResult:
         raise NotImplementedError
 
-    def __call__(self, event: Event, context: Context):
+    def __call__(self, event: Event, context: Context) -> HandlerResult:
         if "http" not in event:
             raise NonWebFunction("Event is not a web event.")
 
@@ -59,9 +59,9 @@ class Route(BaseRoute, _Route):
         self.name = get_name(endpoint) if name is None else name
 
         if methods is None:
-            self.methods = ["GET"]
+            self.methods = {"GET"}
         else:
-            self.methods = [method.upper() for method in methods]
+            self.methods = {method.upper() for method in methods}
 
         self.app = request_response(endpoint)
         self.path_regex, self.path_format, self.param_convertors = compile_path(path)
@@ -83,7 +83,7 @@ class Route(BaseRoute, _Route):
 
         return Match.FULL, path_params
 
-    def handle(self, event: Event, context: Context) -> None:
+    def handle(self, event: Event, context: Context) -> HandlerResult:
         assert "http" in event, "Event is not a web event."
 
         if event["http"]["method"] not in self.methods:

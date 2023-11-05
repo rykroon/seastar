@@ -2,3 +2,11 @@
 #
 # SPDX-License-Identifier: MIT
 __version__ = "0.5.0"
+
+
+"""
+Goals for 0.5.0:
+- resolve any mypy errors
+- Incorporate ServerErrorMiddleware with debug option.
+- Add documentation.
+"""

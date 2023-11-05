@@ -5,6 +5,7 @@ from typing import Any, Optional
 from starlette import responses
 
 from seastar.json import JsonEncoder
+from seastar.types import HandlerResult
 
 
 class Response(responses.Response):
@@ -27,11 +28,11 @@ class Response(responses.Response):
             background=None
         )
 
-    def __call__(self):
+    def __call__(self) -> HandlerResult:
         result = {"statusCode": self.status_code}
         if self.body is not None:
             result["body"] = self.body
-        
+
         if self.headers:
             result["headers"] = dict(self.headers)
         

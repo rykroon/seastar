@@ -1,15 +1,30 @@
+from collections.abc import Mapping
+from typing import Any, Optional
+
 from starlette._exception_handler import _lookup_exception_handler
 from starlette.exceptions import HTTPException
 from starlette.middleware import exceptions
 
 from seastar.requests import Request
 from seastar.responses import Response, PlainTextResponse
-from seastar.types import Context, Event
+from seastar.types import (
+    Context,
+    Event,
+    HandlerResult,
+    WebExceptionHandler,
+    EventHandler,
+)
 
 
 class ExceptionMiddleware(exceptions.ExceptionMiddleware):
-    
-    def __call__(self, event: Event, context: Context):
+    def __init__(
+        self,
+        app: EventHandler,
+        handlers: Optional[Mapping[Any, WebExceptionHandler]] = None,
+    ):
+        super().__init__(app, handlers)
+
+    def __call__(self, event: Event, context: Context) -> HandlerResult:
         _ = event.setdefault("__seastar", {}).setdefault("entry_point", self) is self
 
         try:
@@ -20,7 +35,7 @@ class ExceptionMiddleware(exceptions.ExceptionMiddleware):
 
             if isinstance(exc, HTTPException):
                 handler = self._status_handlers.get(exc.status_code)
-            
+
             if handler is None:
                 handler = _lookup_exception_handler(self._exception_handlers, exc)
 
