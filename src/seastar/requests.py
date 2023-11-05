@@ -14,7 +14,6 @@ from seastar.types import Event
 
 
 class Request:
-
     def __init__(self, event: Event):
         if "http" not in event:
             raise NonWebFunction("Event is not a web event.")

@@ -16,7 +16,6 @@ from seastar.types import (
 
 
 class ExceptionMiddleware:
-
     def __init__(
         self,
         app: EventHandler,
@@ -31,7 +30,7 @@ class ExceptionMiddleware:
         if handlers is not None:
             for key, value in handlers.items():
                 self.add_exception_handler(key, value)
-    
+
     def __call__(self, event: Event, context: Context) -> HandlerResult:
         _ = event.setdefault("__seastar", {}).setdefault("entry_point", self) is self
 
@@ -47,10 +46,11 @@ class ExceptionMiddleware:
             response = handler(request, exc)
             return response()
 
-    
     __code__ = __call__.__code__
 
-    def add_exception_handler(self, key: Union[int, Exception], handler: WebExceptionHandler) -> None:
+    def add_exception_handler(
+        self, key: Union[int, Exception], handler: WebExceptionHandler
+    ) -> None:
         if isinstance(key, int):
             self._status_handlers[key] = handler
         else:
@@ -63,12 +63,13 @@ class ExceptionMiddleware:
 
         return _lookup_exception_handler(self._exception_handlers, exc)
 
-    def exception_handler(self, key: Union[int, Exception]  ) -> WebExceptionHandler:
+    def exception_handler(self, key: Union[int, Exception]) -> WebExceptionHandler:
         def decorator(func: WebExceptionHandler) -> WebExceptionHandler:
             self.add_exception_handler(key, func)
             return func
+
         return decorator
-    
+
     def http_exception(self, request: Request, exc: Exception) -> Response:
         assert isinstance(exc, HTTPException)
         if exc.status_code in {204, 304}:

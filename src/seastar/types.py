@@ -8,7 +8,6 @@ if TYPE_CHECKING:
     from seastar.responses import Response
 
 
-
 class HttpDict(TypedDict):
     method: str
     path: str

@@ -19,7 +19,6 @@ def request_response(func: WebHandler) -> EventHandler:
 
 
 class Route:
-
     def __init__(
         self,
         path: str,
