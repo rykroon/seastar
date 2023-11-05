@@ -1,9 +1,7 @@
 from typing import Any, Optional
 
 from starlette.exceptions import HTTPException
-from starlette.routing import (
-    compile_path, get_name,BaseRoute as _BaseRoute, Match, Route as _Route
-)
+from starlette.routing import compile_path, get_name, Match
 
 from seastar.exceptions import NonWebFunction
 from seastar.requests import Request
@@ -20,30 +18,7 @@ def request_response(func: WebHandler) -> EventHandler:
     return wrapper
 
 
-class BaseRoute(_BaseRoute):
-
-    def matches(self, event: Event) -> tuple[Match, dict[str, Any]]: # type: ignore[override]
-        raise NotImplementedError
-    
-    def handle(self, event: Event, context: Context) -> HandlerResult: # type: ignore[override]
-        raise NotImplementedError
-
-    def __call__(self, event: Event, context: Context) -> HandlerResult: # type: ignore[override]
-        if "http" not in event:
-            raise NonWebFunction("Event is not a web event.")
-
-        _ = event.setdefault("__seastar", {}).setdefault("entry_point", self) is self
-
-        match, path_params = self.matches(event)
-        if match == Match.NONE:
-            response = PlainTextResponse("Not Found", status_code=404)
-            return response()
-
-        event["http"].setdefault("path_params", path_params)
-        return self.handle(event, context)
-
-
-class Route(BaseRoute, _Route):
+class Route:
 
     def __init__(
         self,
@@ -66,7 +41,21 @@ class Route(BaseRoute, _Route):
         self.app = request_response(endpoint)
         self.path_regex, self.path_format, self.param_convertors = compile_path(path)
 
-    def matches(self, event: Event) -> tuple[Match, dict[str, Any]]: # type: ignore[override]
+    def __call__(self, event: Event, context: Context) -> HandlerResult:
+        if "http" not in event:
+            raise NonWebFunction("Event is not a web event.")
+
+        _ = event.setdefault("__seastar", {}).setdefault("entry_point", self) is self
+
+        match, path_params = self.matches(event)
+        if match == Match.NONE:
+            response = PlainTextResponse("Not Found", status_code=404)
+            return response()
+
+        event["http"].setdefault("path_params", path_params)
+        return self.handle(event, context)
+
+    def matches(self, event: Event) -> tuple[Match, dict[str, Any]]:
         match = self.path_regex.match(event["http"]["path"])
         if not match:
             return Match.NONE, {}
@@ -83,12 +72,11 @@ class Route(BaseRoute, _Route):
 
         return Match.FULL, path_params
 
-    def handle(self, event: Event, context: Context) -> HandlerResult: # type: ignore[override]
+    def handle(self, event: Event, context: Context) -> HandlerResult:
         assert "http" in event, "Event is not a web event."
 
         if event["http"]["method"] not in self.methods:
             headers = {"Allow": ", ".join(self.methods)}
-
             is_entry_point = event.get("__seastar", {}).get("entry_point") is self
 
             if is_entry_point:

@@ -2,22 +2,10 @@ import pytest
 
 from starlette.exceptions import HTTPException
 
-from seastar.routing import BaseRoute, Route, Match
+from seastar.routing import Route, Match
 from seastar.exceptions import NonWebFunction
 from seastar.requests import Request
 from seastar.responses import PlainTextResponse
-
-
-def test_baseroute_matches():
-    route = BaseRoute()
-    with pytest.raises(NotImplementedError):
-        route.matches({})
-
-
-def test_baseroute_handle():
-    route = BaseRoute()
-    with pytest.raises(NotImplementedError):
-        route.handle({}, None)
 
 
 def test_route_init():
