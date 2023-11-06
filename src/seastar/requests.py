@@ -8,15 +8,14 @@ from starlette.datastructures import FormData, Headers, QueryParams
 from starlette.exceptions import HTTPException
 from starlette.requests import cookie_parser
 
-from seastar.exceptions import NonWebFunction
-from seastar.exceptions import NotRawHttp
+from seastar.exceptions import WebEventException
 from seastar.types import Event
 
 
 class Request:
     def __init__(self, event: Event):
         if "http" not in event:
-            raise NonWebFunction("Event is not a web event.")
+            raise WebEventException("The event was expected to be a web event.")
         self.event = event
 
     @cached_property
@@ -34,7 +33,7 @@ class Request:
     @cached_property
     def query_params(self) -> QueryParams:
         if "queryString" not in self.event["http"]:
-            raise NotRawHttp("Must activate raw http to use query params.")
+            raise WebEventException("Must activate raw http to use query_params.")
 
         return QueryParams(self.event["http"]["queryString"])
 
@@ -51,7 +50,7 @@ class Request:
     @cached_property
     def body(self) -> str:
         if "body" not in self.event["http"]:
-            raise NotRawHttp("Must activate raw http to use body.")
+            raise WebEventException("Must activate raw http to use body.")
 
         body = self.event["http"]["body"]
         if self.event["http"].get("isBase64Encoded", False):

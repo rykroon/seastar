@@ -3,7 +3,7 @@ from typing import Any, Optional
 from starlette.exceptions import HTTPException
 from starlette.routing import compile_path, get_name, Match
 
-from seastar.exceptions import NonWebFunction
+from seastar.exceptions import WebEventException
 from seastar.requests import Request
 from seastar.responses import PlainTextResponse
 from seastar.types import Context, Event, EventHandler, HandlerResult, WebHandler
@@ -42,7 +42,7 @@ class Route:
 
     def __call__(self, event: Event, context: Context) -> HandlerResult:
         if "http" not in event:
-            raise NonWebFunction("Event is not a web event.")
+            raise WebEventException("The event was expected to be a web event.")
 
         _ = event.setdefault("__seastar", {}).setdefault("entry_point", self) is self
 

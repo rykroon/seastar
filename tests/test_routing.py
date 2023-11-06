@@ -3,7 +3,7 @@ import pytest
 from starlette.exceptions import HTTPException
 
 from seastar.routing import Route, Match
-from seastar.exceptions import NonWebFunction
+from seastar.exceptions import WebEventException
 from seastar.requests import Request
 from seastar.responses import PlainTextResponse
 
@@ -76,7 +76,7 @@ def test_route_non_web_function():
 
     route = Route("/", handler)
     event = {}
-    with pytest.raises(NonWebFunction):
+    with pytest.raises(WebEventException):
         route(event, None)
 
 

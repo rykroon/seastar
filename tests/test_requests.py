@@ -1,14 +1,14 @@
 import pytest
 
 from starlette.exceptions import HTTPException
-from seastar.exceptions import NonWebFunction, NotRawHttp
+from seastar.exceptions import WebEventException
 
 from seastar.requests import Request
 
 
 def test_not_a_web_event():
     event = {}
-    with pytest.raises(NonWebFunction):
+    with pytest.raises(WebEventException):
         Request(event)
 
 
@@ -45,7 +45,7 @@ def test_query_params():
 def test_query_params_not_raw_http():
     event = {"http": {"headers": {}}}
     request = Request(event)
-    with pytest.raises(NotRawHttp):
+    with pytest.raises(WebEventException):
         request.query_params
 
 
@@ -76,7 +76,7 @@ def test_body_base64():
 def test_body_not_raw_http():
     event = {"http": {"headers": {}}}
     request = Request(event)
-    with pytest.raises(NotRawHttp):
+    with pytest.raises(WebEventException):
         request.body
 
 
