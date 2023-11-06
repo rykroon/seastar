@@ -26,7 +26,7 @@ class ExceptionMiddleware:
         self.app = app
         self._status_handlers: Mapping[int, WebExceptionHandler] = {}
         self._exception_handlers: Mapping[type[Exception], WebExceptionHandler] = {
-            HTTPException: self.http_exception
+            HTTPException: http_exception_handler
         }
 
         if handlers is not None:
@@ -74,11 +74,12 @@ class ExceptionMiddleware:
 
         return decorator
 
-    def http_exception(self, request: Request, exc: Exception) -> Response:
-        assert isinstance(exc, HTTPException)
-        if exc.status_code in {204, 304}:
-            return Response(status_code=exc.status_code, headers=exc.headers)
 
-        return PlainTextResponse(
-            exc.detail, status_code=exc.status_code, headers=exc.headers
-        )
+def http_exception_handler(request: Request, exc: Exception) -> Response:
+    assert isinstance(exc, HTTPException)
+    if exc.status_code in {204, 304}:
+        return Response(status_code=exc.status_code, headers=exc.headers)
+
+    return PlainTextResponse(
+        exc.detail, status_code=exc.status_code, headers=exc.headers
+    )
